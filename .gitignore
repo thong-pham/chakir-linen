@@ -59,3 +59,12 @@ typings/
 
 # next.js build output
 .next
+
+# Dist folder
+dist
+
+docs
+
+theme/assets/js
+
+public/admin-assets/js
