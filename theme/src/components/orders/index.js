@@ -25,22 +25,22 @@ class Orders extends React.Component {
           this.props.history.push('/login');
       }
       else {
-          const { user } = this.props.state;
-          if (user){
-              this.props.fetchOrders(user._id);
+          const { userInfo } = this.props.state;
+          if (userInfo){
+              this.props.fetchOrders(userInfo.id);
           }
           else {
-              const userData = JSON.parse(localStorage.getItem('user'));
-              this.props.fetchOrders(userData._id);
+              const id = JSON.parse(localStorage.getItem('user_id'));
+              this.props.fetchOrders(id);
           }
-      }      
+      }
    }
 
    orderNavigate = (type) => {
      if (type === 'Orders'){
          this.setState({allOrdersActive: true, shippingOrdersActive: false, deliveredOrdersActive: false, cancelledOrdersActive: false, processingOrdersActive: false});
      }
-     else if (type === 'Shipping Orders'){
+     else if (type === 'Shipped Orders'){
          this.setState({allOrdersActive: false, shippingOrdersActive: true, deliveredOrdersActive: false, cancelledOrdersActive: false, processingOrdersActive: false});
      }
      else if (type === 'Delivered Orders'){
@@ -62,7 +62,8 @@ class Orders extends React.Component {
 
   render(){
 
-       const { location, user, token, orders } = this.props.state;
+       const { location, userInfo, token, orders } = this.props.state;
+       const { reviewProduct } = this.props;
        //console.log(orders);
        const { allOrdersActive, shippingOrdersActive, deliveredOrdersActive, cancelledOrdersActive, processingOrdersActive } = this.state;
        var allOrders = null;
@@ -72,7 +73,7 @@ class Orders extends React.Component {
        var processingOrders = null;
        if (orders){
           allOrders = orders.data;
-          shippingOrders = orders.data.filter(order => order.status === 'Shipping');
+          shippingOrders = orders.data.filter(order => order.status === 'Shipped');
           deliveredOrders = orders.data.filter(order => order.status === 'Delivered');
           cancelledOrders = orders.data.filter(order => order.status === 'Cancelled');
           processingOrders = orders.data.filter(order => order.status === 'Processing');
@@ -92,19 +93,19 @@ class Orders extends React.Component {
             </div>
             <div className="columns">
                 {(allOrdersActive) ? <div className="column is-9 is-offset-2">
-                    <OrderList orders={allOrders}/>
+                    <OrderList orders={allOrders} reviewProduct={reviewProduct}/>
                 </div> : null}
                 {(shippingOrdersActive) ? <div className="column is-9 is-offset-2">
-                    <OrderList orders={shippingOrders}/>
+                    <OrderList orders={shippingOrders} reviewProduct={reviewProduct}/>
                 </div> : null}
                 {(deliveredOrdersActive) ? <div className="column is-9 is-offset-2">
-                    <OrderList orders={deliveredOrders}/>
+                    <OrderList orders={deliveredOrders} reviewProduct={reviewProduct}/>
                 </div> : null}
                 {(cancelledOrdersActive) ? <div className="column is-9 is-offset-2">
-                    <OrderList orders={cancelledOrders}/>
+                    <OrderList orders={cancelledOrders} reviewProduct={reviewProduct}/>
                 </div> : null}
                 {(processingOrdersActive) ? <div className="column is-9 is-offset-2">
-                    <OrderList orders={processingOrders}/>
+                    <OrderList orders={processingOrders} reviewProduct={reviewProduct}/>
                 </div> : null}
             </div>
           </div>

@@ -19,6 +19,11 @@ class OrderItem extends React.Component {
           this.setState({popup:false});
       }
 
+      writeReview = (item) => {
+          this.props.reviewProduct(item);
+      }
+
+
       render () {
           const { popup } = this.state;
           const myPopup = false;
@@ -32,13 +37,16 @@ class OrderItem extends React.Component {
                   itemView = order.items.map(item =>
                       <div key={item.id} className="columns">
                         <div className="column is-3 imgAlign">
-                            <NavLink to={item.path}><img className="imgSize" src={item.image}/></NavLink>
+                            <NavLink to={item.path}><img className="imgSize" src={item.image_url}/></NavLink>
                             <span className="quantityBox">{item.quantity}</span>
                         </div>
-                        <div className="column is-9">
-                              <NavLink to={item.path}><p>{item.name}{(item.variant_name) ? <span> - {item.variant_name}</span> : null}</p></NavLink>
-                              <p>${item.price}</p>
+                        <div className="column is-6">
+                              <NavLink to={item.path}>{item.name}{(item.variant_name) ? <span> - {item.variant_name}</span> : null}</NavLink>
+                              <p className="product-price">${item.price}</p>
                               <button type="button" className="button is-rounded is-danger">Add To Cart</button>
+                        </div>
+                        <div className="column is-3">
+                            <NavLink to={'/products/review-your-purchases'}><button type="button" className="button is-rounded is-light" onClick={() => this.writeReview(item)}>Write a product review</button></NavLink>
                         </div>
                       </div>
                   )
@@ -77,7 +85,7 @@ class OrderItem extends React.Component {
                             <div className="column is-12">
                                 <h4><strong>{order.status}</strong></h4>
                                 {(order.status === 'Delivered') ? <p>Your package was delivered</p> : null}
-                                {(order.status === 'Shipping') ? <p>Your package is being shipped</p> : null}
+                                {(order.status === 'Shipped') ? <p>Your package is being shipped</p> : null}
                                 {(order.status === 'Processing') ? <p>Your order is being processed</p> : null}
                                 {(order.status === 'Cancelled') ? <p>Your order was cancelled</p> :  null}
                             </div>
@@ -101,13 +109,13 @@ class OrderList extends React.Component {
 
     render(){
 
-        const { orders } = this.props;
+        const { orders, reviewProduct } = this.props;
 
         let orderList = null;
 
         if (orders && orders.length > 0){
             orderList = orders.map(order =>
-                <OrderItem key={order.id} order={order} />
+                <OrderItem key={order.id} order={order} reviewProduct={reviewProduct} />
             )
         }
 

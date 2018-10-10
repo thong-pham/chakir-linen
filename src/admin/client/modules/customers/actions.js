@@ -1,10 +1,10 @@
 import * as t from './actionTypes'
 import api from 'lib/api'
+import restApi from 'lib/restApi'
 import messages from 'lib/text'
 import axios from 'axios'
-const push = () => {}
 
-const URL = "http://localhost:3001/api/v1/";
+const push = () => {}
 
 function requestCustomer() {
   return {
@@ -129,38 +129,14 @@ export function fetchCustomers() {
       dispatch(requestCustomers());
       dispatch(deselectAllCustomer());
 
-      let filter = getFilter(state);
-      var query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
-      return axios.get(URL + "users?" + query)
-        .then(({status, data}) => {
-          dispatch(receiveCustomers(data))
-        })
-        .catch(error => {
-            dispatch(receiveCustomersError(error));
-        });
-    }
-  }
+      const filter = getFilter(state);
+      const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
+      return axios.get(restApi.url + "/users?" + query, { headers: restApi.headers })
+          .then(response => { dispatch(receiveCustomers(response.data)) })
+          .catch(error => { dispatch(receiveCustomersError(error)) })
+      }
+   }
 }
-
-// export function fetchCustomers() {
-//   return (dispatch, getState) => {
-//     const state = getState();
-//     if (!state.customers.loadingItems) {
-//       dispatch(requestCustomers());
-//       dispatch(deselectAllCustomer());
-//
-//       let filter = getFilter(state);
-//
-//       return api.customers.list(filter)
-//         .then(({status, json}) => {
-//           dispatch(receiveCustomers(json))
-//         })
-//         .catch(error => {
-//             dispatch(receiveCustomersError(error));
-//         });
-//     }
-//   }
-// }
 
 export function fetchMoreCustomers() {
   return (dispatch, getState) => {
@@ -168,15 +144,11 @@ export function fetchMoreCustomers() {
     if (!state.customers.loadingItems) {
       dispatch(requestMoreCustomers());
 
-      let filter = getFilter(state, state.customers.items.length);
-
-      return api.customers.list(filter)
-        .then(({status, json}) => {
-          dispatch(receiveCustomersMore(json))
-        })
-        .catch(error => {
-            dispatch(receiveCustomersError(error));
-        });
+      const filter = getFilter(state, state.customers.items.length);
+      const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
+      return axios.get(restApi.url + "/users?" + query, { headers : restApi.headers })
+        .then(response => { dispatch(receiveCustomersMore(response.data)) })
+        .catch(error => { dispatch(receiveCustomersError(error)) })
     }
   }
 }
@@ -184,13 +156,13 @@ export function fetchMoreCustomers() {
 export function deleteCustomers() {
   return (dispatch, getState) => {
     const state = getState();
-    let promises = state.customers.selected.map(customerId => api.customers.delete(customerId));
+    let promises = state.customers.selected.map(customerId => axios.delete(restApi.url + "/users/" + customerId, { headers : restApi.headers }));
 
     return Promise.all(promises).then(values => {
-      dispatch(deleteCustomersSuccess());
-      dispatch(deselectAllCustomer());
-      dispatch(fetchCustomers());
-    }).catch(err => {});
+        dispatch(deleteCustomersSuccess());
+        dispatch(deselectAllCustomer());
+        dispatch(fetchCustomers());
+    }).catch(error => { console.log(error.response) });
   }
 }
 
@@ -200,8 +172,9 @@ export function deleteCurrentCustomer() {
     let customer = state.customers.editCustomer;
 
     if(customer && customer.id) {
-      return api.customers.delete(customer.id)
-      .catch(err => { console.log(err) });
+        return axios.delete(restApi.url + "/users/" + customer.id, { headers : restApi.headers })
+                      .then(response => response.status === 200 ? response.status : undefined)
+                      .catch(err => { console.log(err.response) })
     }
   }
 }
@@ -209,23 +182,21 @@ export function deleteCurrentCustomer() {
 export function setGroup(group_id) {
   return (dispatch, getState) => {
     const state = getState();
-    let promises = state.customers.selected.map(customerId => api.customers.update(customerId, { group_id: group_id }));
+    let promises = state.customers.selected.map(customerId => axios.put(restApi.url + "/users/" + customerId, { group_id: group_id }, { headers : restApi.headers }));
 
     return Promise.all(promises).then(values => {
-      dispatch(setGroupSuccess());
-      dispatch(deselectAllCustomer());
-      dispatch(fetchCustomers());
-    }).catch(err => {});
+        dispatch(setGroupSuccess());
+        dispatch(deselectAllCustomer());
+        dispatch(fetchCustomers());
+    }).catch(err => { console.log(err.response) })
   }
 }
 
 export function updateCustomer(data) {
   return (dispatch, getState) => {
-    return api.customers.update(data.id, data)
-    .then(customerResponse => {
-        dispatch(receiveCustomer(customerResponse.json));
-    })
-    .catch(error => {});
+    return axios.put(restApi.url + "/users/" + data.id, data, { headers : restApi.headers })
+        .then(response => { dispatch(receiveCustomer(response.data)) })
+        .catch(error => { console.log(error.response) })
   }
 }
 
@@ -233,62 +204,41 @@ export function fetchCustomer(customerId) {
   return (dispatch, getState) => {
     dispatch(requestCustomer());
 
-    return axios.get(URL + "users/" + customerId)
-    .then(customerResponse => {
-      dispatch(receiveCustomer(customerResponse.data))
-    })
-    .catch(error => {});
-  }
+    return axios.get(restApi.url + "/users/" + customerId, { headers : restApi.headers })
+        .then(response => { dispatch(receiveCustomer(response.data)) })
+        .catch(error => { console.log(error.response) })
+    }
 }
 
-// export function fetchCustomer(customerId) {
-//   return (dispatch, getState) => {
-//     dispatch(requestCustomer());
-//
-//     return api.customers.retrieve(customerId)
-//     .then(customerResponse => {
-//       dispatch(receiveCustomer(customerResponse.json))
-//     })
-//     .catch(error => {});
-//   }
-// }
+export function approveCustomer(customer) {
+  return (dispatch, getState) => {
+    //dispatch(requestCustomer());
+    return axios.put(restApi.url + "/users/approve/" + customer.id, { headers : restApi.headers })
+        .then(response => response.data)
+        .catch(error => { console.log(error.response) })
+    }
+}
 
 export function updateAddress(customerId, addressId, data) {
   return (dispatch, getState) => {
-    return api.customers.updateAddress(customerId, addressId, data)
-    .then(customerResponse => {
-        dispatch(fetchCustomer(customerId));
-    })
-    .catch(error => {});
-  }
+      return axios.put(restApi.url + "/users/" + customerId + "/shipping_address/" + addressId, data, { headers : restApi.headers })
+          .then(response => { dispatch(fetchCustomer(customerId)) })
+          .catch(error => { console.log(error.response) })
+      }
 }
 
 export function deleteAddress(customerId, addressId) {
   return (dispatch, getState) => {
-    return api.customers.deleteAddress(customerId, addressId)
-    .then(customerResponse => {
-        dispatch(fetchCustomer(customerId));
-    })
-    .catch(error => {});
-  }
-}
-
-export function setDefaultBillingAddress(customerId, addressId) {
-  return (dispatch, getState) => {
-    return api.customers.setDefaultBillingAddress(customerId, addressId)
-    .then(customerResponse => {
-        dispatch(fetchCustomer(customerId));
-    })
-    .catch(error => {});
-  }
+    return axios.delete(restApi.url + "/users/" + customerId + "/shipping_address/" + addressId, { headers : restApi.headers })
+        .then(response => { dispatch(fetchCustomer(customerId)) })
+        .catch(error => { console.log(error.response) })
+    }
 }
 
 export function setDefaultShippingAddress(customerId, addressId) {
   return (dispatch, getState) => {
-    return api.customers.setDefaultShippingAddress(customerId, addressId)
-    .then(customerResponse => {
-        dispatch(fetchCustomer(customerId));
-    })
-    .catch(error => {});
-  }
+    return axios.put(restApi.url + "/users/" + customerId + "/shipping_address/" + addressId + "/default_shipping", { headers : restApi.headers })
+        .then(response => { dispatch(fetchCustomer(customerId)) })
+        .catch(error => { console.log(error.response) })
+    }
 }

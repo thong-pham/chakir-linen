@@ -118,13 +118,10 @@ class UserInfo extends React.Component {
            this.props.history.push('/login');
        }
        else {
-           const { user } = this.props.state;
-           if (user){
-               this.props.fetchUserData(user._id);
-           }
-           else {
-               const userData = JSON.parse(localStorage.getItem('user'));
-               this.props.fetchUserData(userData._id);
+           const { userInfo } = this.props.state;
+           if (!userInfo) {
+               const id = JSON.parse(localStorage.getItem('user_id'));
+               this.props.fetchUserData(id);
            }
        }
    }

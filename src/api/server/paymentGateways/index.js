@@ -21,7 +21,6 @@ const getOptions = (orderId) => {
           amount: order.order_total,
           currency: settings.currency_code
         };
-
         return options;
       });
     }

@@ -84,7 +84,7 @@ const getCustomerAddress = (address) => {
       'address1': getString(address.address1),
       'address2': getString(address.address2),
       'city': getString(address.city),
-      'country': getString(address.country).toUpperCase(),
+      'country': getString(address.country),
       'state': getString(address.state),
       'phone': getString(address.phone),
       'postal_code': getString(address.postal_code),
@@ -93,8 +93,8 @@ const getCustomerAddress = (address) => {
       'tax_number': getString(address.tax_number),
       'coordinates': coordinates,
       'details': address.details,
-      'default_billing': false,
-      'default_shipping': false
+      'residential': getBooleanIfValid(address.residential, false),
+      'default_shipping': true
     }
     : {};
 }
@@ -122,7 +122,8 @@ const getOrderAddress = (address) => {
     'company': '',
     'tax_number': '',
     'coordinates': coordinates,
-    'details': null
+    'details': null,
+    'residential': null
   };
 
   return address ? Object.assign({},
@@ -130,7 +131,7 @@ const getOrderAddress = (address) => {
       'address1': getString(address.address1),
       'address2': getString(address.address2),
       'city': getString(address.city),
-      'country': getString(address.country).toUpperCase(),
+      'country': getString(address.country),
       'state': getString(address.state),
       'phone': getString(address.phone),
       'postal_code': getString(address.postal_code),
@@ -138,7 +139,8 @@ const getOrderAddress = (address) => {
       'company': getString(address.company),
       'tax_number': getString(address.tax_number),
       'coordinates': coordinates,
-      'details': address.details
+      'details': address.details,
+      'residential': getBooleanIfValid(address.residential, false)
     },
     address
   ) : emptyAddress;

@@ -13,8 +13,9 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     onDelete: () => {
-      dispatch(deleteCurrentProduct());
-      ownProps.history.push('/admin/products');
+      dispatch(deleteCurrentProduct()).then(data => {
+          ownProps.history.push('/admin/products');
+      });    
     }
   }
 }

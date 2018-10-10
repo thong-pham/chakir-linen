@@ -2,6 +2,9 @@ import React from 'react'
 import {Field, reduxForm} from 'redux-form'
 import text from '../../text'
 import { formatCurrency } from '../../lib/helper'
+import axios from 'axios'
+import countries from '../countries'
+
 
 const validateRequired = value => value && value.length > 0 ? undefined : text.required;
 
@@ -11,15 +14,6 @@ const inputField = (field) => (
     <input {...field.input} placeholder={field.placeholder} type={field.type} id={field.id} className={field.meta.touched && field.meta.error
       ? "invalid"
       : ""}/>
-  </div>
-)
-
-const textareaField = (field) => (
-  <div className={field.className}>
-    <label htmlFor={field.id}>{field.label}{field.meta.touched && field.meta.error && <span className="error">{field.meta.error}</span>}</label>
-    <textarea {...field.input} placeholder={field.placeholder} rows={field.rows} id={field.id} className={field.meta.touched && field.meta.error
-      ? "invalid"
-      : ""}></textarea>
   </div>
 )
 
@@ -58,134 +52,154 @@ class CheckoutShippingMethod extends React.Component {
     super(props);
     this.state = {
       done: false,
-      showShipping: false
+      showShipping: false,
+      shippingMethods: null,
+      error: null
     };
   }
 
   getShippingMethods = () => {
-      var request = new XMLHttpRequest();
-
-      request.open('POST', 'https://ssapi.shipstation.com/shipments/getrates');
-      request.setRequestHeader('Access-Control-Allow-Origin', '*');
-      request.setRequestHeader('Access-Control-Allow-Headers', 'X-Requested-With, Origin, Accept, Content-Type, Authorization, X-Powered-By, Content-Length, Connection');
-      request.setRequestHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-      request.setRequestHeader('Access-Control-Allow-Credentials', true);
-      request.setRequestHeader('Content-Type', 'application/json');
-      request.setRequestHeader('Authorization', 'Basic MmFlYTQ2NzliZjRhNGRlOGJlZDM5MmZiNTBkNDhkNDA6NDg5ZDYwY2RhMDY3NDJhYzhkODhjZGFkYTM0OTA3ZjA=');
-
-      request.onreadystatechange = function () {
-          if (this.readyState === 4 && this.status === 200) {
-              var data = JSON.parse(this.responseText);
-              console.log(data);
-              //this.setState({shippingMethods: data});
-          }
-      };
-      request.send();
+        const headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic YjNjMDYyMjU3ZDFlNGJlMDhlN2I5NjAzNTRlYzJiZTA6ODQwMzc5OWU5NWFmNDZmNDg5ZGZkMzZhOTZlMjdiNjU='
+        }
+        axios.get('https://private-anon-063d6fe4f2-shipstation.apiary-mock.com/carriers/listservices?carrierCode=fedex', {headers: headers})
+            .then(function(response){
+                return response.data;
+            })
+            .then(function(data){
+                 console.log(data);
+            })
+            .catch(function(error){
+                  const response = error.response;
+                  throw response;
+            })
   }
 
-  getShippingRates = (data, callback) => {
-      var request = new XMLHttpRequest();
+  getShippingRates = (rate) => {
 
-      request.open('POST', 'https://ssapi.shipstation.com/shipments/getrates');
-      request.setRequestHeader('Access-Control-Allow-Origin', '*');
-      request.setRequestHeader('Access-Control-Allow-Headers', 'X-Requested-With, Origin, Accept, Content-Type, Authorization, X-Powered-By, Content-Length, Connection');
-      request.setRequestHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-      request.setRequestHeader('Access-Control-Allow-Credentials', true);
-      request.setRequestHeader('Content-Type', 'application/json');
-      request.setRequestHeader('Authorization', 'Basic MmFlYTQ2NzliZjRhNGRlOGJlZDM5MmZiNTBkNDhkNDA6NDg5ZDYwY2RhMDY3NDJhYzhkODhjZGFkYTM0OTA3ZjA=');
+        let country = '';
+        for (const key in countries) {
+            if (countries[key] === rate.country){
+                country = key;
+            }
+        }
+        let residential = null;
+        if (rate.residential === 'true') residential = true;
+        else if (rate.residential === 'false') residential = false;
+        else residential = rate.residential;
 
-      request.onreadystatechange = function () {
-          if (this.readyState === 4 && this.status === 200) {
-              var data = JSON.parse(this.responseText);
-              callback(data[0].shipmentCost);
-              //this.setState({shippingMethods: data});
-          }
-      };
-
-        var body = {
-          'carrierCode': data.carrierCode,
-          'serviceCode': data.serviceCode,
-          'packageCode': 'package',
-          'fromPostalCode': '92704',
-          'toState': data.state,
-          'toCountry': 'US',
-          'toPostalCode': data.zipcode,
-          'toCity': data.city,
-          'weight': {
-            'value': data.weight,
-            'units': 'lb'
-          },
-          'confirmation': 'delivery',
-          'residential': false
-      };
-
-      request.send(JSON.stringify(body));
+        const headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic YjNjMDYyMjU3ZDFlNGJlMDhlN2I5NjAzNTRlYzJiZTA6ODQwMzc5OWU5NWFmNDZmNDg5ZGZkMzZhOTZlMjdiNjU='
+        }
+        const data = {
+            carrierCode: rate.carrierCode,
+            serviceCode: rate.serviceCode,
+            packageCode: 'package',
+            fromPostalCode: '92704',
+            toState: rate.state,
+            toCountry: country,
+            toPostalCode: rate.zipcode,
+            toCity: rate.city,
+            weight: {
+              value: rate.weight,
+              units: 'lb'
+            },
+            confirmation: 'delivery',
+            residential: residential
+        };
+        //console.log(data);
+        return axios.post('https://ssapi.shipstation.com/shipments/getrates', data, {headers: headers})
+        //return axios.post('https://private-anon-063d6fe4f2-shipstation.apiary-mock.com/shipments/getrates', data, {headers: headers})
+            .then(function(response){
+                return response.data;
+            })
+            .then(function(data){
+                 //console.log(data);
+                 if (data.length === 0) return 0;
+                 return data[0].shipmentCost + data[0].otherCost;
+            })
+            .catch(function(error){
+                  const response = error.response;
+                  throw response;
+            })
   }
 
-    objectsAreSame(items1, items2) {
-       var objectsAreSame = true;
-       for (var i = 0; i < items1.length; i++) {
-          if (items1[i].quantity !== items2[i].quantity) {
-             objectsAreSame = false;
-             break;
-          }
-       }
-       return objectsAreSame;
-    }
+  objectsAreSame(items1, items2) {
+     if (items1.length !== items2.length) return false;
+     for (var i = 0; i < items1.length; i++) {
+        if (items1[i].quantity !== items2[i].quantity) {
+           return false
+        }
+     }
+     return true;
+  }
 
   componentWillReceiveProps(nextProps) {
     const isSame = this.objectsAreSame(this.props.initialValues.items, nextProps.initialValues.items);
+    const { initialValues } = nextProps;
+    const shippingMethods = nextProps.shippingMethods ? nextProps.shippingMethods : this.state.shippingMethods;
+
     if(!isSame || this.props.show !== nextProps.show){
         this.setState({showShipping: false});
-        const { shippingMethods, initialValues } = nextProps;
-        if (shippingMethods !== undefined && shippingMethods.length > 0){
+        if (shippingMethods && shippingMethods.length > 0){
             let list = [];
             let rate = null;
-            let finalCount = 0;
             let count = 0;
             shippingMethods.forEach((method) => {
-                let total = 0;
+                let totalWeight = 0;
                 initialValues.items.forEach((item) => {
-                    rate = {
-                        carrierCode: method.carrierCode,
-                        serviceCode: method.serviceCode,
-                        state: initialValues.shipping_address.state,
-                        city: initialValues.shipping_address.city,
-                        country: initialValues.shipping_address.country,
-                        zipcode: initialValues.shipping_address.postal_code,
-                        weight:  item.weight
+                    totalWeight += item.weight * item.quantity;
+                });
+                //console.log(totalWeight);
+                rate = {
+                    carrierCode: method.carrierCode,
+                    serviceCode: method.serviceCode,
+                    state: initialValues.shipping_address.state,
+                    city: initialValues.shipping_address.city,
+                    country: initialValues.shipping_address.country,
+                    zipcode: initialValues.shipping_address.postal_code,
+                    residential: initialValues.shipping_address.residential,
+                    weight:  totalWeight
+                }
+                this.getShippingRates(rate).then(data => {
+                    if (method.serviceCode === 'fedex_standard_overnight' || method.serviceCode === 'ups_2nd_day_air'){
+                        method.price = data + Number(((data*10)/100).toFixed(Math.max(0, ~~ 2)));
                     }
-                    this.getShippingRates(rate, (data) => {
-                         total = total + data;
-                         count += 1;
-                         if (count === initialValues.items.length){
-                             //console.log(total);
-                             method.price = total;
-                             count = 0;
-                             finalCount += 1;
-                         }
-                         if (finalCount === shippingMethods.length){
-                              this.setState({showShipping: true});
-                         }
-                    },this)
-                })
+                    else {
+                        method.price = data + Number(((data*7)/100).toFixed(Math.max(0, ~~ 2)));
+                    }
+                    //method.price = data;
+                    count += 1;
+                    if (count === shippingMethods.length){
+                         this.setState({showShipping: true, shippingMethods: shippingMethods});
+                    }
+                },this)
             })
-        }
-    }
+          }
+       }
   }
-
-
 
   componentDidMount() {
      this.props.onLoad();
+     //this.getShippingMethods();
   }
 
   handleSave = () => {
-    this.setState({
-      done: true
-    });
-    this.props.saveForm();
-    this.props.onSave();
+    const { initialValues } = this.props;
+    if (initialValues.shipping_method_id === null){
+        this.setState({error: "Please select your shipping method!"});
+    }
+    else {
+        this.setState({
+          done: true
+        });
+        this.props.saveForm();
+        this.props.onSave();
+    }
   };
 
   handleEdit = () => {
@@ -207,58 +221,90 @@ class CheckoutShippingMethod extends React.Component {
       initialValues,
       loadingShippingMethods,
       saveShippingMethod,
-      shippingMethods,
+      //shippingMethods,
       shippingMethod,
       checkoutFields,
       settings,
       finishCheckout,
       inputClassName,
       buttonClassName,
-      editButtonClassName
+      editButtonClassName,
+      user
     } = this.props;
     //console.log(shippingMethods);
     const hideBillingAddress = settings.hide_billing_address === true;
     //const { payment_method_gateway, grand_total } = initialValues;
     //const showPaymentForm = payment_method_gateway && payment_method_gateway !== '';
     const showPaymentForm = true;
+    const { showShipping, shippingMethods, error } = this.state;
 
     let shippingView = <div>Loading Shipping Prices ...</div>;
-    if (this.state.showShipping && shippingMethods && shippingMethods.length > 0){
-       shippingView = shippingMethods.map((method, index) => <label key={index} className={'shipping-method' + (method.id === initialValues.shipping_method_id ? ' active': '')}>
-            <Field
-              name="shipping_method_id"
-              component="input"
-              type="radio"
-              value={method.id}
-              onClick={() => saveShippingMethod(method.id, method.price)}
-            />
-            <div>
-              <div className="shipping-method-name">{method.name}</div>
-              <div className="shipping-method-description">{method.description}</div>
-            </div>
-              <span className="shipping-method-rate">{formatCurrency(method.price, settings)}</span>
-        </label>)
+    if (showShipping && shippingMethods && shippingMethods.length > 0){
+       shippingView = shippingMethods.map((method, index) =>
+           {
+             if (method.price > 0) {
+               return (
+                   <label key={index} className={'shipping-method' + (method.id === initialValues.shipping_method_id ? ' active': '')}>
+                        <Field
+                          name="shipping_method_id"
+                          component="input"
+                          type="radio"
+                          value={method.id}
+                          onClick={() => saveShippingMethod(method.id, method.price)}
+                        />
+                        <div>
+                          <div className="shipping-method-name">{method.name}</div>
+                          <div className="shipping-method-description">{method.description}</div>
+                        </div>
+                          <span className="shipping-method-rate">{formatCurrency(method.price, settings)}</span>
+                    </label>
+                )
+              } else {
+                return null
+              }
+           }
+        )
     }
 
     if(!this.props.show){
       return (
         <div className="checkout-step">
-          <h1><span>3</span>{this.props.title}</h1>
+          <h1>{(user) ? <span>2</span> : <span>3</span>} {this.props.title}</h1>
         </div>
       )
     }
     else if(this.state.done){
       return (
         <div className="checkout-step">
-          <h1>Your shipping method is {shippingMethod.name}</h1>
+          <h1>{(user) ? <span>2</span> : <span>3</span>} Shipping Method</h1>
+          <div style={{textAlign: 'center'}}>
+              <h3>{shippingMethod.name} ({formatCurrency(shippingMethod.price, settings)})</h3>
+          </div>
+
+          <div className="checkout-button-wrap">
+            <button
+              type="button"
+              onClick={this.handleEdit}
+              className={editButtonClassName}>
+              {text.edit}
+            </button>
+          </div>
+
         </div> )
 
     }
     else {
 
+      let errorView = null;
+      if (error){
+          errorView = (
+              <div className="error-box">{error}</div>
+          )
+      }
+
       return (
         <div className="checkout-step">
-          <h1><span>3</span>{this.props.title}</h1>
+          <h1>{(user) ? <span>2</span> : <span>3</span>} {this.props.title}</h1>
 
           <form onSubmit={handleSubmit}>
 
@@ -290,6 +336,7 @@ class CheckoutShippingMethod extends React.Component {
                 </button>
               }
 
+              {errorView}
             </div>
           </form>
         </div>

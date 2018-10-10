@@ -246,6 +246,12 @@ h1 {
   line-height: 14px !important;
 }
 
+.no-account {
+    text-align: center;
+    font-size: 25px;
+    margin-top: 20px;
+}
+
 
 /*
 MOBILE

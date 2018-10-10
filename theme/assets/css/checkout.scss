@@ -37,7 +37,8 @@
   width: 100%;
   border: 1px solid #e0e0e0;
   border-radius: 3px;
-  padding: 12px 16px;
+  padding: 9px 16px;
+  font-size: 1em;
 }
 
 .checkout-field input[type="text"]:focus,
@@ -166,7 +167,7 @@
 .checkout-box, .checkout-step {
   padding: 30px;
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0 3px 8px 0 rgba(0,0,0,0.1);
 }
 

@@ -135,9 +135,9 @@ export default class OrderSummary extends React.Component {
             {allowEdit &&
               <RaisedButton label="Edit" style={{ marginRight:15 }} onClick={this.showSummaryEdit} />
             }
-            {isDraft &&
+            {/*isDraft &&
               <RaisedButton label={messages.placeOrder} primary={true} onClick={onCheckout} disabled={processingCheckout} />
-            }
+            */}
           </div>
 
           <Dialog

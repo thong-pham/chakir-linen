@@ -61,7 +61,7 @@ class LoginForm extends React.Component {
   };
 
   getField = (fieldName) => {
-    const fields = this.props.registerFields || [];
+    const fields = this.props.formFields || [];
     const field = fields.find(item => item.name === fieldName);
     return field;
   }
@@ -94,7 +94,8 @@ class LoginForm extends React.Component {
 
   getFieldPlaceholder = (fieldName) => {
     const field = this.getField(fieldName);
-    return field && field.placeholder && field.placeholder.length > 0 ? field.placeholder : '';
+    const placeholder = this.getFieldLabelText(fieldName);
+    return field && field.placeholder && field.placeholder.length > 0 ? field.placeholder : placeholder;
   }
 
   getFieldLabelText = (fieldName) => {
@@ -120,6 +121,12 @@ class LoginForm extends React.Component {
     return this.isFieldOptional(fieldName) ? `${labelText} (${text.optional})` : labelText;
   }
 
+  handleKeyPress = (e) => {
+    if (e.keyCode === 13 || e.which === 13) {
+      this.handleSearch();
+    }
+  }
+
   render() {
     const {
       handleSubmit,
@@ -134,13 +141,15 @@ class LoginForm extends React.Component {
     } = this.props;
 
     const {
-      registerInputClass = 'register-field',
-      registerButtonClass = 'register-button button is-primary'
-    } = themeSettings;
+        formInputClass = 'form-field',
+        formButtonClass = 'form-button button is-primary',
+        formSelectClass = 'form-select'
+      } = themeSettings;
 
-    const inputClassName = registerInputClass;
-    const buttonClassName = registerButtonClass;
-    //const { shippingMethods } = this.state;
+    const inputClassName = formInputClass;
+    const buttonClassName = formButtonClass;
+    const selectClassName = formSelectClass;
+
     let error = null;
     if (loggingInError){
         error = (
@@ -148,27 +157,27 @@ class LoginForm extends React.Component {
         )
     }
     return (
-        <div className="register-step">
+        <div className="form-step">
 
           <form onSubmit={handleSubmit}>
 
             {!this.isFieldHidden('email') &&
               <Field className={inputClassName} name="email" id="customer.email" component={inputField} type="email"
-                label={this.getFieldLabel('email')}
+                //label={this.getFieldLabel('email')}
                 validate={this.getFieldValidators('email')}
                 placeholder={this.getFieldPlaceholder('email')}/>
             }
 
             {!this.isFieldHidden('password') &&
               <Field className={inputClassName} name="password" id="customer.password" component={inputField} type="password"
-                label={this.getFieldLabel('password')}
+                //label={this.getFieldLabel('password')}
                 validate={this.getFieldValidators('password')}
                 placeholder={this.getFieldPlaceholder('password')}/>
             }
             {error}
-            <div className="register-button-wrap">
+            <div className="form-button-wrap">
               <button
-                  type="button"
+                  type="submit"
                   onClick={handleSubmit}
                   disabled={invalid}
                   className={buttonClassName}>

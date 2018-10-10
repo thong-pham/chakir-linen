@@ -20,7 +20,7 @@ const Attributes = ({ attributes }) => {
 
     return (
       <div className="product-attributes">
-        <div className="title is-5">{text.attributes}</div>
+        <h2>{text.attributes}</h2>
         {items}
       </div>
     )

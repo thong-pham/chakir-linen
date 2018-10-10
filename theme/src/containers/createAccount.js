@@ -18,7 +18,7 @@ const CreateAccountContainer = (props) => {
       />
 
       <section className="section section-checkout">
-        <div className="container">
+        <div className="container" style={{width: '700px'}}>
           <div className="columns columns-checkout">
             <div className="column is-12-widescreen is-12-desktop">
               {createAccountForm}

@@ -7,6 +7,7 @@ import ProductInventory from 'modules/products/edit/inventory'
 import ProductImages from 'modules/products/edit/images'
 import ProductGeneral from 'modules/products/edit/general'
 import ProductAdditional from 'modules/products/edit/additional'
+import Wholesale from 'modules/products/edit/wholesale'
 
 class ProductEditContainer extends React.Component {
   constructor(props) {
@@ -29,6 +30,9 @@ class ProductEditContainer extends React.Component {
 
         <div style={{margin: 20, color: 'rgba(0, 0, 0, 0.52)'}}>{messages.products_inventory}</div>
         <ProductInventory />
+
+        <div style={{margin: 20, color: 'rgba(0, 0, 0, 0.52)'}}>{messages.quantity_and_price}</div>
+        <Wholesale />
 
         <div style={{margin: 20, color: 'rgba(0, 0, 0, 0.52)'}}>{messages.productVariants}</div>
         <ProductVariants />

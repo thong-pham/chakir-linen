@@ -3,25 +3,28 @@ import queryString from 'query-string'
 import {getParsedProductFilter, getProductFilterForCategory, getProductFilterForSearch} from '../shared/actions'
 import * as themeLocales from './themeLocales'
 import {PAGE, PRODUCT_CATEGORY, PRODUCT, RESERVED, SEARCH} from '../shared/pageTypes'
+import axios from 'axios'
+import restApi from './restApi'
 
-const PRODUCT_FIELDS = 'path,id,name,category_id,category_ids,category_name,sku,images,enabled,discontinued,stock_status,stock_quantity,price,on_sale,regular_price,attributes,tags,position';
+const PRODUCT_FIELDS = 'path,id,name,category_id,category_ids,category_name,sku,images,enabled,discontinued,stock_status,stock_quantity,price,prices,on_sale,regular_price,attributes,tags,position';
 const CATEGORIES_FIELDS = 'image,name,description,meta_description,meta_title,sort,parent_id,position,slug,id';
 
 const getCurrentPage = path => {
-  return api.sitemap.retrieve({ path: path, enabled: true })
-    .then(sitemapResponse => {
-      if(sitemapResponse.status === 200) {
-        return sitemapResponse.json;
-      } else if(sitemapResponse.status === 404) {
-        return {
-          type: 404,
-          path: path,
-          resource: null
+  return axios.get(restApi.url + "/sitemap?path=" + path + "&enabled=true", { headers: restApi.headers })
+    .then(response => {
+        if(response.status === 200) {
+            return response.data;
+        } else if(response.status === 404) {
+            return {
+              type: 404,
+              path: path,
+              resource: null
+            }
+        } else {
+            return Promise.reject(`Page response code = ${response.status}`)
         }
-      } else {
-        return Promise.reject(`Page response code = ${sitemapResponse.status}`)
-      }
     })
+    .catch(error => { console.log(error) })
 }
 
 const getProducts = (currentPage, productFilter) => {
@@ -29,7 +32,9 @@ const getProducts = (currentPage, productFilter) => {
     let filter = getParsedProductFilter(productFilter);
 
     filter.enabled = true;
-    return api.products.list(filter).then(({status, json}) => json);
+    const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
+    return axios.get(restApi.url + "/products?" + query, { headers: restApi.headers }).then(response => response.data);
+    //return api.products.list(filter).then(({status, json}) => json);
   } else {
     return null;
   }
@@ -37,7 +42,8 @@ const getProducts = (currentPage, productFilter) => {
 
 const getProduct = currentPage => {
   if (currentPage.type === PRODUCT) {
-    return api.products.retrieve(currentPage.resource).then(({status, json}) => json);
+    return axios.get(restApi.url + "/products/" + currentPage.resource, { headers: restApi.headers }).then(response => response.data)
+    //return api.products.retrieve(currentPage.resource).then(({status, json}) => json);
   } else {
     return {};
   }
@@ -45,33 +51,35 @@ const getProduct = currentPage => {
 
 const getPage = currentPage => {
   if (currentPage.type === PAGE) {
-    return api.pages.retrieve(currentPage.resource).then(({status, json}) => json);
+    return axios.get(restApi.url + "/pages/" + currentPage.resource, { headers: restApi.headers }).then(response => response.data)
+    //return api.pages.retrieve(currentPage.resource).then(({status, json}) => json);
   } else {
     return {};
   }
 }
 
 const getThemeSettings = () => {
-  return api.theme.settings.retrieve()
-  .then(({status, json}) => json)
-  .catch(err => ({}));
+    return api.theme.settings.retrieve()
+    .then(({status, json}) => json)
+    .catch(err => ({}));
 }
 
 const getAllData = (currentPage, productFilter, cookie) => {
-  
   return Promise.all([
-    api.checkoutFields.list().then(({status, json}) => json),
-    api.productCategories.list({enabled: true, fields: CATEGORIES_FIELDS}).then(({status, json}) => json),
-    api.ajax.cart.retrieve(cookie).then(({status, json}) => json),
-    getProducts(currentPage, productFilter),
-    getProduct(currentPage),
-    getPage(currentPage),
-    getThemeSettings()
+      //api.checkoutFields.list().then(({status, json}) => json),
+      axios.get(restApi.url + "/settings/checkout/fields", { headers: restApi.headers }).then(response => response.data),
+      //api.productCategories.list({enabled: true, fields: CATEGORIES_FIELDS}).then(({status, json}) => json),
+      axios.get(restApi.url + "/product_categories?enabled=true&fields=" + CATEGORIES_FIELDS, { headers: restApi.headers }).then(response => response.data),
+      //api.ajax.cart.retrieve(cookie).then(({status, data}) => data),
+      getProducts(currentPage, productFilter),
+      getProduct(currentPage),
+      getPage(currentPage),
+      getThemeSettings()
   ])
   .then(([
     checkoutFields,
     categories,
-    cart,
+    //cart,
     products,
     product,
     page,
@@ -84,7 +92,7 @@ const getAllData = (currentPage, productFilter, cookie) => {
     return {
       checkoutFields,
       categories,
-      cart,
+      //cart,
       products,
       product,
       page,
@@ -95,74 +103,74 @@ const getAllData = (currentPage, productFilter, cookie) => {
 }
 
 const getState = (currentPage, settings, allData, location, productFilter) => {
-  const {
-    checkoutFields,
-    categories,
-    cart,
-    products,
-    product,
-    page,
-    categoryDetails,
-    themeSettings
-  } = allData;
+    const {
+      checkoutFields,
+      categories,
+      //cart,
+      products,
+      product,
+      page,
+      categoryDetails,
+      themeSettings
+    } = allData;
 
-  let productsTotalCount = 0;
-  let productsHasMore = false;
-  let productsMinPrice = 0;
-  let productsMaxPrice = 0;
-  let productsAttributes = [];
+    let productsTotalCount = 0;
+    let productsHasMore = false;
+    let productsMinPrice = 0;
+    let productsMaxPrice = 0;
+    let productsAttributes = [];
 
-  if(products){
-    productsTotalCount = products.total_count;
-    productsHasMore = products.has_more;
-    productsAttributes = products.attributes;
+    if(products){
+      productsTotalCount = products.total_count;
+      productsHasMore = products.has_more;
+      productsAttributes = products.attributes;
 
-    if(products.price) {
-      productsMinPrice = products.price.min;
-      productsMaxPrice = products.price.max;
+      if(products.price) {
+        productsMinPrice = products.price.min;
+        productsMaxPrice = products.price.max;
+      }
     }
-  }
 
-  const state = { app: {
-      settings: settings,
-      location: location,
-      currentPage: currentPage,
-      pageDetails: page,
-      categoryDetails: categoryDetails,
-      productDetails: product,
-      categories: categories,
-      products: products && products.data ? products.data : [],
-      productsTotalCount: productsTotalCount,
-      productsHasMore: productsHasMore,
-      productsMinPrice: productsMinPrice,
-      productsMaxPrice: productsMaxPrice,
-      productsAttributes: productsAttributes,
-      paymentMethods: [],
-      shippingMethods: [],
-      loadingProducts: false,
-      loadingMoreProducts: false,
-      loadingShippingMethods: false,
-      loadingPaymentMethods: false,
-      processingCheckout: false,
-      productFilter: {
-        onSale: null,
-        search: productFilter.search || '',
-        categoryId: productFilter.categoryId,
-        priceFrom: productFilter.priceFrom || 0,
-        priceTo: productFilter.priceTo || 0,
-        attributes: productFilter.attributes,
-        sort: settings.default_product_sorting,
-        fields: settings.product_fields && settings.product_fields !== '' ? settings.product_fields : PRODUCT_FIELDS,
-        limit: settings.products_limit && settings.products_limit !== 0 ? settings.products_limit : 30
-      },
-      cart: cart,
-      order: null,
-      checkoutFields: checkoutFields,
-      themeSettings: themeSettings
+    const state = { app: {
+        settings: settings,
+        location: location,
+        currentPage: currentPage,
+        pageDetails: page,
+        categoryDetails: categoryDetails,
+        productDetails: product,
+        categories: categories,
+        products: products && products.data ? products.data : [],
+        productsTotalCount: productsTotalCount,
+        productsHasMore: productsHasMore,
+        productsMinPrice: productsMinPrice,
+        productsMaxPrice: productsMaxPrice,
+        productsAttributes: productsAttributes,
+        paymentMethods: [],
+        shippingMethods: [],
+        loadingProducts: false,
+        loadingMoreProducts: false,
+        loadingShippingMethods: false,
+        loadingPaymentMethods: false,
+        processingCheckout: false,
+        productFilter: {
+          onSale: null,
+          search: productFilter.search || '',
+          categoryId: productFilter.categoryId,
+          priceFrom: productFilter.priceFrom || 0,
+          priceTo: productFilter.priceTo || 0,
+          attributes: productFilter.attributes,
+          sort: settings.default_product_sorting,
+          fields: settings.product_fields && settings.product_fields !== '' ? settings.product_fields : PRODUCT_FIELDS,
+          limit: settings.products_limit && settings.products_limit !== 0 ? settings.products_limit : 30
+        },
+        cart: null,
+        order: null,
+        checkoutFields: checkoutFields,
+        themeSettings: themeSettings
+      }
     }
-  }
 
-  return state;
+    return state;
 }
 
 const getFilter = (currentPage, urlQuery, settings) => {
@@ -193,9 +201,9 @@ export const loadState = (req, language) => {
 
   return Promise.all([
     getCurrentPage(req.path),
-    api.settings.retrieve().then(({status, json}) => json),
+    axios.get(restApi.url + "/settings", { headers: restApi.headers }).then(response => response.data),
     themeLocales.getText(language),
-    api.theme.placeholders.list()
+    axios.get(restApi.url + "/theme/placeholders", { headers: restApi.headers })
   ])
   .then(([currentPage, settings, themeText, placeholdersResponse]) => {
     const productFilter = getFilter(currentPage, urlQuery, settings);
@@ -205,7 +213,7 @@ export const loadState = (req, language) => {
       return {
         state: state,
         themeText: themeText,
-        placeholders: placeholdersResponse.json
+        placeholders: placeholdersResponse.data
       }
     });
   })

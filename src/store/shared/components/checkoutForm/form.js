@@ -5,6 +5,7 @@ import CheckoutStepShipping from '../stepShipping'
 import CheckoutShippingMethod from '../shippingMethod'
 import CheckoutStepPayment from '../stepPayment'
 
+
 export default class Form extends React.Component {
   constructor(props) {
     super(props);
@@ -17,13 +18,13 @@ export default class Form extends React.Component {
       const { user } = this.props;
       if (user){
           this.setState({step: 2});
-          this.props.onLoad(user._id);
+          //this.props.onLoad(user.id);
       }
       else {
-          const userData = JSON.parse(localStorage.getItem('user'));
-          if (userData){
+          const id = JSON.parse(localStorage.getItem('user_id'));
+          if (id){
               this.setState({step: 2});
-              this.props.onLoad(userData._id);
+              this.props.onLoad(id);
           }
       }
   }
@@ -44,12 +45,14 @@ export default class Form extends React.Component {
     this.setState({
       step: 3
     });
+    this.props.hideQuantity();
   };
 
   handleShippingEdit = () => {
     this.setState({
       step: 2
     });
+    this.props.showQuantity();
   };
 
   handleShippingMethodSave = () => {
@@ -83,7 +86,6 @@ export default class Form extends React.Component {
             step = 2;
         }
     }
-
     if (cart && cart.items.length > 0) {
       //const { payment_method_gateway } = cart;
       //const showPaymentForm = payment_method_gateway && payment_method_gateway !== '';

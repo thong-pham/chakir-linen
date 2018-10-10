@@ -4,18 +4,14 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 
 export default class ConfirmationDialog extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      open: props.open
-    };
+
+  state = {
+      open: this.props.open
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.state.open !== nextProps.open) {
-      this.setState({
-        open: nextProps.open
-      })
+      this.setState({open: nextProps.open})
     }
   }
 

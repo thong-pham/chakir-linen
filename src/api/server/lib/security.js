@@ -8,6 +8,8 @@ const SET_TOKEN_AS_REVOKEN_ON_EXCEPTION = true;
 
 const PATHS_WITH_OPEN_ACCESS = [
   '/api/v1/authorize',
+  '/api/v1/systems/login',
+  '/api/v1/users/login',
   /\/api\/v1\/payments/i,
   /\/api\/v1\/notifications/i,
   /\/ajax\//i
@@ -22,12 +24,10 @@ const scope = {
   WRITE_PRODUCT_CATEGORIES: 'write:product_categories',
   READ_ORDERS: 'read:orders',
   WRITE_ORDERS: 'write:orders',
-  READ_CUSTOMERS: 'read:customers',
-  WRITE_CUSTOMERS: 'write:customers',
   READ_USERS: 'read:users',
   WRITE_USERS: 'write:users',
-  READ_CUSTOMER_GROUPS: 'read:customer_groups',
-  WRITE_CUSTOMER_GROUPS: 'write:customer_groups',
+  READ_USER_GROUPS: 'read:user_groups',
+  WRITE_USER_GROUPS: 'write:user_groups',
   READ_PAGES: 'read:pages',
   WRITE_PAGES: 'write:pages',
   READ_ORDER_STATUSES: 'read:order_statuses',

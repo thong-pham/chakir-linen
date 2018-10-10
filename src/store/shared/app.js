@@ -21,8 +21,14 @@ import AccountContainer from './containers/account'
 import OrdersContainer from './containers/orders'
 import AddressContainer from './containers/addresses'
 import UserInfoContainer from './containers/userInfo'
+import ReviewProduct from './containers/reviewProduct'
+import ReviewSuccess from './containers/reviewSuccess'
+import AboutUs from './containers/aboutUs'
+import TermsOfService from './containers/termsOfService'
+import ShippingPolicy from './containers/shippingPolicy'
+import ReturnPolicy from './containers/returnPolicy'
 
-import {setCurrentPage, confirmEmail, fetchTokenAndUser} from './actions'
+import {setCurrentPage, confirmEmail, fetchTokenAndUser, fetchCartById} from './actions'
 import {PAGE, PRODUCT_CATEGORY, PRODUCT, RESERVED, SEARCH} from './pageTypes'
 
 class SwitchContainers extends React.Component {
@@ -60,6 +66,10 @@ class SwitchContainers extends React.Component {
               }
               this.props.confirmEmail(data);
           }
+          else if (paths.length > 2 && paths[1] === 'checkout'){
+              var order_id = paths[2];
+              this.props.updateCart(order_id);
+          }
       }
   }
 
@@ -73,6 +83,8 @@ class SwitchContainers extends React.Component {
     var locationPathname = '';
     var paths = [];
     var idParam = '';
+    var orderId = '';
+    var customerType = '';
     if (path === '/'){
         locationPathname = '/';
     }
@@ -84,6 +96,15 @@ class SwitchContainers extends React.Component {
             currentPage.type = PAGE;
             locationPathname = '/' + paths[1];
         }
+        else if (paths.length > 2 && paths[1] === 'create-success'){
+            customerType = paths[2];
+            currentPage.type = PAGE;
+            locationPathname = '/' + paths[1];
+        }
+        else if (paths.length > 2 && paths[1] === 'checkout'){
+            currentPage.type = PAGE;
+            locationPathname = '/' + paths[1];
+        }
         else if (paths.length > 2) {
             locationPathname = '/' + paths[1] + '/' + paths[2];
         }
@@ -91,11 +112,8 @@ class SwitchContainers extends React.Component {
             locationPathname = '/' + paths[1];
         }
 
-        if (paths[1] === 'create-success'){
-            currentPage.type = PAGE;
-        }
     }
-
+    //console.log(locationPathname);
     switch(currentPage.type){
       case PRODUCT:
         return <ProductContainer />;
@@ -107,13 +125,25 @@ class SwitchContainers extends React.Component {
         if(locationPathname === '/'){
           return <IndexContainer />;
         }
+        else if(locationPathname === '/about-our-company'){
+          return <AboutUs />;
+        }
+        else if(locationPathname === '/terms-of-service'){
+          return <TermsOfService />;
+        }
+        else if(locationPathname === '/shipping-policy'){
+          return <ShippingPolicy />;
+        }
+        else if(locationPathname === '/return-policy'){
+          return <ReturnPolicy />;
+        }
         else if(locationPathname === '/register'){
           return <CreateAccountContainer />;
         }
         else if(locationPathname === '/login'){
           return <LoginContainer />;
         }
-        else if(locationPathname === '/account-2'){
+        else if(locationPathname === '/user-account'){
             if (token !== null){
                 return <AccountContainer />;
             }
@@ -130,14 +160,20 @@ class SwitchContainers extends React.Component {
         else if(locationPathname === '/account/userInfo'){
              return <UserInfoContainer />;
         }
+        else if(locationPathname === '/products/review-your-purchases'){
+            return <ReviewProduct />;
+        }
         else if(locationPathname === '/checkout'){
             return <CheckoutContainer />;
         }
         else if(locationPathname === '/checkout-success'){
           return <CheckoutSuccessContainer />;
         }
+        else if(locationPathname === '/products/review-success'){
+          return <ReviewSuccess />;
+        }
         else if(locationPathname === '/create-success'){
-          return <CreateAccountSuccessContainer />;
+          return <CreateAccountSuccessContainer customerType={customerType} />;
         }
         else if(locationPathname === '/email-confirm'){
           return <EmailConfirmContainer email={idParam} />;
@@ -168,6 +204,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     },
     fetchTokenAndUser: () => {
         dispatch(fetchTokenAndUser());
+    },
+    updateCart: (order_id) => {
+        dispatch(fetchCartById(order_id));
     }
   }
 }

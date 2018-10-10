@@ -1,7 +1,9 @@
 import * as t from './actionTypes'
 import api from 'lib/api'
+import restApi from 'lib/restApi'
 import messages from 'lib/text'
 import moment from 'moment';
+import axios from 'axios';
 
 function requestProduct() {
   return {
@@ -171,344 +173,398 @@ function imagesUploadEnd() {
 }
 
 const getFilter = (state, offset = 0) => {
-  const searchTerm = state.products.filter.search;
-  const sortOrder = searchTerm && searchTerm.length > 0 ? 'search' : 'name';
+    const searchTerm = state.products.filter.search;
+    const sortOrder = searchTerm && searchTerm.length > 0 ? 'search' : 'name';
 
-  let filter = {
-    limit: 50,
-    fields: 'id,name,category_id,category_ids,category_name,sku,images,enabled,discontinued,stock_status,stock_quantity,price,on_sale,regular_price,url',
-    search: searchTerm,
-    offset: offset,
-    sort: sortOrder
-  }
+    let filter = {
+      limit: 50,
+      fields: 'id,name,category_id,category_ids,category_name,sku,images,enabled,discontinued,stock_status,stock_quantity,price,on_sale,regular_price,url',
+      search: searchTerm,
+      offset: offset,
+      sort: sortOrder
+    }
 
-  if(state.productCategories.selectedId !== null && state.productCategories.selectedId !== 'all') {
-    filter.category_id = state.productCategories.selectedId;
-  }
+    if(state.productCategories.selectedId !== null && state.productCategories.selectedId !== 'all') {
+      filter.category_id = state.productCategories.selectedId;
+    }
 
-  if(state.products.filter.stockStatus !== null) {
-    filter.stock_status = state.products.filter.stockStatus;
-  }
+    if(state.products.filter.stockStatus !== null) {
+      filter.stock_status = state.products.filter.stockStatus;
+    }
 
-  if(state.products.filter.enabled !== null) {
-    filter.enabled = state.products.filter.enabled;
-  }
+    if(state.products.filter.enabled !== null) {
+      filter.enabled = state.products.filter.enabled;
+    }
 
-  if(state.products.filter.discontinued !== null) {
-    filter.discontinued =  state.products.filter.discontinued;
-  }
+    if(state.products.filter.discontinued !== null) {
+      filter.discontinued =  state.products.filter.discontinued;
+    }
 
-  if(state.products.filter.onSale !== null) {
-    filter.on_sale = state.products.filter.onSale;
-  }
+    if(state.products.filter.onSale !== null) {
+      filter.on_sale = state.products.filter.onSale;
+    }
 
-  return filter;
+    return filter;
 }
 
 export function fetchProducts() {
-  return (dispatch, getState) => {
-    const state = getState();
-    if (state.products.loadingItems) {
-      // do nothing
-    } else {
-      dispatch(requestProducts());
-      dispatch(deselectAllProduct());
+    return (dispatch, getState) => {
+        const state = getState();
+        if (state.products.loadingItems) {
+          // do nothing
+        } else {
+          dispatch(requestProducts());
+          dispatch(deselectAllProduct());
 
-      let filter = getFilter(state);
+          const filter = getFilter(state);
+          const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
 
-      return api.products.list(filter)
-        .then(({status, json}) => {
-          dispatch(receiveProducts(json))
-        })
-        .catch(error => {
-            dispatch(receiveProductsError(error));
-        });
-    }
-  }
+          return axios.get(restApi.url + "/products?" + query, { headers : restApi.headers })
+                        .then(response => {
+                              dispatch(receiveProducts(response.data));
+                        })
+                        .catch(error => {
+                              dispatch(receiveProductsError(error));
+                        })
+                }
+        }
 }
 
 export function fetchMoreProducts() {
-  return (dispatch, getState) => {
-    const state = getState();
-    if (!state.products.loadingItems) {
-      dispatch(requestMoreProducts());
+    return (dispatch, getState) => {
+        const state = getState();
+        if (!state.products.loadingItems) {
+          dispatch(requestMoreProducts());
 
-      const offset = state.products.items.length;
-      let filter = getFilter(state, offset);
+          const offset = state.products.items.length;
+          const filter = getFilter(state, offset);
+          const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
 
-      return api.products.list(filter)
-        .then(({status, json}) => {
-          dispatch(receiveProductsMore(json))
-        })
-        .catch(error => {
-            dispatch(receiveProductsError(error));
-        });
-    }
-  }
+          return axios.get(restApi.url + "/products?" + query, { headers : restApi.headers })
+                        .then(response => {
+                              dispatch(receiveProductsMore(response.data));
+                        })
+                        .catch(error => {
+                              dispatch(receiveProductsError(error));
+                        })
+                }
+        }
 }
 
 export function deleteCurrentProduct() {
-  return (dispatch, getState) => {
-    const state = getState();
-    let product = state.products.editProduct;
-    if(product && product.id) {
-      return api.products.delete(product.id)
-      .then(() => {})
-      .catch(err => { console.log(err) });
-    }
-  }
+    return (dispatch, getState) => {
+        const state = getState();
+        const product = state.products.editProduct;
+        if(product && product.id) {
+            return axios.delete(restApi.url + "/products/" + product.id, { headers : restApi.headers })
+                          .then(response => response.status === 200 ? response.status : undefined)
+                          .catch(error => { console.log(error.response) })
+                }
+        }
 }
 
 export function deleteProducts() {
-  return (dispatch, getState) => {
-    const state = getState();
-    let promises = state.products.selected.map(productId => api.products.delete(productId));
+    return (dispatch, getState) => {
+        const state = getState();
+        let promises = state.products.selected.map(productId => axios.delete(restApi.url + "/products/" + productId, { headers : restApi.headers }));
 
-    return Promise.all(promises).then(values => {
-      dispatch(deleteProductsSuccess());
-      dispatch(deselectAllProduct());
-      dispatch(fetchProducts());
-    }).catch(err => { console.log(err) });
-  }
+        return Promise.all(promises).then(values => {
+            dispatch(deleteProductsSuccess());
+            dispatch(deselectAllProduct());
+            dispatch(fetchProducts());
+        }).catch(error => {
+            console.log(error);
+        });
+    }
 }
 
 export function setCategory(category_id) {
-  return (dispatch, getState) => {
-    const state = getState();
-    let promises = state.products.selected.map(productId => api.products.update(productId, { category_id: category_id }));
+    return (dispatch, getState) => {
+        const state = getState();
+        let promises = state.products.selected.map(productId => axios.put(restApi.url + "/products/" + productId, { category_id: category_id }, { headers : restApi.headers }));
 
-    return Promise.all(promises).then(values => {
-      dispatch(setCategorySuccess());
-      dispatch(deselectAllProduct());
-      dispatch(fetchProducts());
-    }).catch(err => { console.log(err) });
-  }
+        return Promise.all(promises).then(values => {
+            dispatch(setCategorySuccess());
+            dispatch(deselectAllProduct());
+            dispatch(fetchProducts());
+        }).catch(error => {
+            console.log(error)
+        });
+    }
 }
 
 export function updateProduct(data) {
-  return (dispatch, getState) => {
-    dispatch(requestUpdateProduct());
-
-    return api.products.update(data.id, data).then(({status, json}) => {
-        const product = fixProductData(json);
-        dispatch(receiveUpdateProduct(product));
-    })
-    .catch(error => {
-        dispatch(errorUpdateProduct(error));
-    });
-  }
+    return (dispatch, getState) => {
+        dispatch(requestUpdateProduct());
+        return axios.put(restApi.url + "/products/" + data.id, data, { headers : restApi.headers })
+                      .then(response => {
+                            const product = fixProductData(response.data);
+                            dispatch(receiveUpdateProduct(product));
+                      })
+                      .catch(error => {
+                            dispatch(errorUpdateProduct(error));
+                      })
+              }
 }
 
 export function createProduct(history) {
-  return (dispatch, getState) => {
-    const state = getState();
-
-    const productDraft = {
-      enabled: false,
-      category_id: state.productCategories.selectedId
-    };
-
-    return api.products.create(productDraft).then(({status, json}) => {
-        dispatch(successCreateProduct(json.id));
-        history.push('/admin/product/' + json.id);
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        const state = getState();
+        const productDraft = {
+          enabled: false,
+          category_id: state.productCategories.selectedId
+        };
+        return axios.post(restApi.url + "/products", productDraft, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(successCreateProduct(response.data.id));
+                            history.push('/admin/product/' + response.data.id);
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 const fixProductData = (product) => {
-  const saleFrom = moment(product.date_sale_from);
-  const saleTo = moment(product.date_sale_to);
-  const stockExpected = moment(product.date_stock_expected);
+    const saleFrom = moment(product.date_sale_from);
+    const saleTo = moment(product.date_sale_to);
+    const stockExpected = moment(product.date_stock_expected);
 
-  product.date_sale_from = saleFrom.isValid() ? saleFrom.toDate() : null;
-  product.date_sale_to = saleTo.isValid() ? saleTo.toDate() : null;
-  product.date_stock_expected = stockExpected.isValid() ? stockExpected.toDate() : null;
+    product.date_sale_from = saleFrom.isValid() ? saleFrom.toDate() : null;
+    product.date_sale_to = saleTo.isValid() ? saleTo.toDate() : null;
+    product.date_stock_expected = stockExpected.isValid() ? stockExpected.toDate() : null;
 
-  return product;
+    return product;
 }
 
 export function fetchProduct(id) {
-  return (dispatch, getState) => {
-    dispatch(requestProduct());
-
-    return api.products.retrieve(id).then(({status, json}) => {
-      const product = fixProductData(json);
-      dispatch(receiveProduct(product))
-    })
-    .catch(error => {
-      dispatch(receiveProductError(error));
-    });
-  }
+    return (dispatch, getState) => {
+        dispatch(requestProduct());
+        return axios.get(restApi.url + "/products/" + id, { headers : restApi.headers })
+                      .then(response => {
+                            const product = fixProductData(response.data);
+                            dispatch(receiveProduct(product));
+                      })
+                      .catch(error => {
+                            dispatch(receiveProductError(error));
+                      })
+              }
 }
 
 export function fetchImages(productId) {
-  return (dispatch, getState) => {
-    return api.products.images.list(productId).then(({status, json}) => {
-      dispatch(receiveImages(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.get(restApi.url + "/products/" + productId + "/images", { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveImages(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function fetchOptions(productId) {
-  return (dispatch, getState) => {
-    return api.products.options.list(productId).then(({status, json}) => {
-      dispatch(receiveOptions(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.get(restApi.url + "/products/" + productId + "/options", { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveOptions(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function fetchVariants(productId) {
-  return (dispatch, getState) => {
-    return api.products.variants.list(productId).then(({status, json}) => {
-      dispatch(receiveVariants(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.get(restApi.url + "/products/" + productId + "/variants", { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveVariants(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function createVariant(productId) {
-  return (dispatch, getState) => {
-    const state = getState();
-    const { regular_price, stock_quantity, weight } = state.products.editProduct;
-    const variant = {
-      price: regular_price,
-      stock_quantity: stock_quantity,
-      weight: weight
-    };
-
-    return api.products.variants.create(productId, variant).then(({status, json}) => {
-      dispatch(receiveVariants(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        const state = getState();
+        const { regular_price, stock_quantity, weight } = state.products.editProduct;
+        const variant = {
+            price: regular_price,
+            stock_quantity: stock_quantity,
+            weight: weight
+        };
+        return axios.post(restApi.url + "/products/" + productId + "/variants", variant, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveVariants(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function updateVariant(productId, variantId, variant) {
-  return (dispatch, getState) => {
-    return api.products.variants.update(productId, variantId, variant).then(({status, json}) => {
-      dispatch(receiveVariants(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.put(restApi.url + "/products/" + productId + "/variants/" + variantId, variant, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveVariants(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function setVariantOption(productId, variantId, optionId, valueId) {
-  return (dispatch, getState) => {
-    const option = { option_id: optionId, value_id: valueId };
-    return api.products.variants.setOption(productId, variantId, option).then(({status, json}) => {
-      dispatch(receiveVariants(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        const option = { option_id: optionId, value_id: valueId };
+        return axios.put(restApi.url + "/products/" + productId + "/variants/" + variantId + "/options", option, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveVariants(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function createOptionValue(productId, optionId, valueName) {
-  return (dispatch, getState) => {
-    return api.products.options.values.create(productId, optionId, { name: valueName }).then(({status, json}) => {
-      dispatch(fetchOptions(productId))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.post(restApi.url + "/products/" + productId + "/options/" + optionId + "/values", { name: valueName }, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(fetchOptions(productId));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function createOption(productId, option) {
-  return (dispatch, getState) => {
-    return api.products.options.create(productId, option).then(({status, json}) => {
-      dispatch(receiveOptions(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.post(restApi.url + "/products/" + productId + "/options", option, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveOptions(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function updateOptionValue(productId, optionId, valueId, valueName) {
-  return (dispatch, getState) => {
-    return api.products.options.values.update(productId, optionId, valueId, { name: valueName }).then(({status, json}) => {
-      dispatch(fetchOptions(productId))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.post(restApi.url + "/products/" + productId + "/options/" + optionId + "/values/" + valueId, { name: valueName }, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(fetchOptions(productId));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function updateOption(productId, optionId, option) {
-  return (dispatch, getState) => {
-    return api.products.options.update(productId, optionId, option).then(({status, json}) => {
-      dispatch(receiveOptions(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.put(restApi.url + "/products/" + productId + "/options/" + optionId, option, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveOptions(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function deleteOptionValue(productId, optionId, valueId) {
-  return (dispatch, getState) => {
-    return api.products.options.values.delete(productId, optionId, valueId).then(({status, json}) => {
-      dispatch(fetchOptions(productId))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.delete(restApi.url + "/products/" + productId + "/options/" + optionId + "/values/" + valueId, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(fetchOptions(productId));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function deleteOption(productId, optionId) {
-  return (dispatch, getState) => {
-    return api.products.options.delete(productId, optionId).then(({status, json}) => {
-      dispatch(receiveOptions(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.delete(restApi.url + "/products/" + productId + "/options/" + optionId, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveOptions(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 
 export function deleteVariant(productId, variantId) {
-  return (dispatch, getState) => {
-    return api.products.variants.delete(productId, variantId).then(({status, json}) => {
-      dispatch(receiveVariants(json))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.delete(restApi.url + "/products/" + productId + "/variants/" + variantId, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(receiveVariants(response.data));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function deleteImage(productId, imageId) {
-  return (dispatch, getState) => {
-    return api.products.images.delete(productId, imageId).then(({status, json}) => {
-      dispatch(fetchImages(productId))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.delete(restApi.url + "/products/" + productId + "/images/" + imageId, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(fetchImages(productId));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function updateImage(productId, image) {
-  return (dispatch, getState) => {
-    return api.products.images.update(productId, image.id, image).then(() => {
-      dispatch(fetchImages(productId))
-    })
-    .catch(error => {});
-  }
+    return (dispatch, getState) => {
+        return axios.put(restApi.url + "/products/" + productId + "/images/" + image.id, image, { headers : restApi.headers })
+                      .then(response => {
+                            dispatch(fetchImages(productId));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                      })
+              }
 }
 
 export function updateImages(productId, images) {
-  return (dispatch, getState) => {
-    let promises = images.map(image => api.products.images.update(productId, image.id, image));
+    return (dispatch, getState) => {
+        let promises = images.map(image => axios.put(restApi.url + "/products/" + productId + "/images/" + image.id, image, { headers : restApi.headers }));
 
-    return Promise.all(promises)
-    .then(() => {
-      dispatch(fetchImages(productId))
-    })
-    .catch(error => {});
-  }
+        return Promise.all(promises)
+          .then(() => {
+              dispatch(fetchImages(productId))
+          })
+          .catch(error => {
+              console.log(error.response);
+          });
+    }
 }
 
 export function uploadImages(productId, form) {
-  return (dispatch, getState) => {
-    dispatch(imagesUploadStart());
-    return api.products.images.upload(productId, form)
-    .then(() => {
-      dispatch(imagesUploadEnd());
-      dispatch(fetchImages(productId));
-    })
-    .catch(error => {
-      dispatch(imagesUploadEnd());
-    });
-  }
+    return (dispatch, getState) => {
+        dispatch(imagesUploadStart());
+        return axios.post(restApi.url + "/products/" + productId + "/images", form, { headers : restApi.headers })
+                      .then(response => {
+                          dispatch(imagesUploadEnd());
+                          dispatch(fetchImages(productId));
+                      })
+                      .catch(error => {
+                            console.log(error.response);
+                            dispatch(imagesUploadEnd());
+                      })
+              }
 }

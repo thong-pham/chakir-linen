@@ -7,6 +7,7 @@ import MetaTags from '../components/metaTags'
 const CreateAccountSuccessContainer = (props) => {
 
   const { pageDetails } = props.state;
+  const { customerType } = props;
 
   return (
     <Fragment>
@@ -23,7 +24,8 @@ const CreateAccountSuccessContainer = (props) => {
           <div className="columns content">
             <div className="column is-8 is-offset-2">
               <div className="checkout-box">
-                <p>A confirmation email has been sent to your address. Please check your indox.</p>
+                {(customerType !== 'Reseller') ? <p>A confirmation email has been sent to your address. Please check your indox.</p> :
+                <p>We will review your registration and send you a confirmation email</p>}
               </div>
             </div>
           </div>

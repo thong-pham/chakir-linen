@@ -3,27 +3,28 @@ import messages from 'lib/text'
 import CezerinClient from 'cezerin-client';
 import settings from 'lib/settings';
 import * as auth from 'lib/auth'
+import axios from 'axios'
 
 import RaisedButton from 'material-ui/RaisedButton'
 import Paper from 'material-ui/Paper'
 import TextField from 'material-ui/TextField';
 
 export default class LoginForm extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+
+  state = {
       email: localStorage.getItem('dashboard_email') || '',
-    	isFetching: false,
-    	isAuthorized: false,
-    	emailIsSent: false,
-    	error: null
-    };
+      password: '',
+      isFetching: false,
+      isAuthorized: false,
+      error: null
   }
 
-  handleChange = (event) => {
-    this.setState({
-      email: event.target.value
-    });
+  handleChangeEmail = (e) => {
+    this.setState({email: e.target.value});
+  };
+
+  handleChangePassword = (e) => {
+    this.setState({password: e.target.value});
   };
 
   handleKeyPress = (e) => {
@@ -36,27 +37,26 @@ export default class LoginForm extends React.Component {
     this.setState({
       isFetching: true,
       isAuthorized: false,
-      emailIsSent: false,
       error: null
     });
 
-    CezerinClient.authorize(settings.apiBaseUrl, this.state.email)
-    .then(authorizeResponse => {
-      this.setState({
-        isFetching: false,
-        isAuthorized: false,
-        emailIsSent: authorizeResponse.json.sent,
-        error: authorizeResponse.json.error
-      });
-    })
-    .catch(error => {
-      this.setState({
-        isFetching: false,
-        isAuthorized: false,
-        emailIsSent: false,
-        error: error
-      });
-    });
+    const data = {
+        email: this.state.email,
+        password: this.state.password
+    }
+
+    axios.post(settings.apiBaseUrl + '/systems/login', data)
+        .then(response => {
+            return response.data;
+        })
+        .then(data => {
+            this.setState({isFetching: false, isAuthorized: true});
+            auth.checkTokenFromLogIn(data.token);
+        })
+        .catch(error => {
+            console.log(error);
+            this.setState({isFetching: false, error: error.response.data.message});
+        })
   }
 
   componentWillMount() {
@@ -65,13 +65,7 @@ export default class LoginForm extends React.Component {
   componentDidMount() {}
 
   render() {
-    const {
-      email,
-      isFetching,
-    	isAuthorized,
-    	emailIsSent,
-    	error
-    } = this.state;
+    const { email, password, isFetching, isAuthorized, emailIsSent, error } = this.state;
 
     let response = null;
     if(isFetching){
@@ -92,12 +86,22 @@ export default class LoginForm extends React.Component {
               <TextField
                 type='email'
                 value={email}
-                onChange={this.handleChange}
+                onChange={this.handleChangeEmail}
                 onKeyPress={this.handleKeyPress}
                 label={messages.email}
                 fullWidth={true}
                 hintStyle={{width: '100%'}}
                 hintText={messages.email}
+              />
+              <TextField
+                type='password'
+                value={password}
+                onChange={this.handleChangePassword}
+                onKeyPress={this.handleKeyPress}
+                label={messages.password}
+                fullWidth={true}
+                hintStyle={{width: '100%'}}
+                hintText={messages.password}
               />
             </div>
             <RaisedButton
@@ -106,8 +110,8 @@ export default class LoginForm extends React.Component {
               disabled={isFetching || emailIsSent}
               onClick={this.handleSubmit}
             />
-            {response}
           </Paper>
+          {response}
         </div>
       </div>
     );

@@ -1,7 +1,7 @@
 import React from 'react'
-
+import axios from 'axios'
 import messages from 'lib/text'
-import api from 'lib/api'
+import restApi from 'lib/restApi'
 import * as helper from 'lib/helper'
 
 import Dialog from 'material-ui/Dialog';
@@ -57,21 +57,17 @@ const SearchResult = ({ products, selectedId, settings, onSelect }) => {
 }
 
 export default class ConfirmationDialog extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      open: props.open,
-      products: [],
-      search: '',
-      selectedId: null
-    };
+
+  state = {
+    open: this.props.open,
+    products: [],
+    search: '',
+    selectedId: null
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.state.open !== nextProps.open) {
-      this.setState({
-        open: nextProps.open
-      })
+      this.setState({open: nextProps.open})
     }
   }
 
@@ -101,18 +97,36 @@ export default class ConfirmationDialog extends React.Component {
 
   handleSearch = (event, value) => {
     this.setState({search: value});
+    const filter = {
+        limit: 50,
+        enabled: true,
+        discontinued: false,
+        fields: 'id,name,category_id,category_name,sku,enabled,discontinued,price,on_sale,regular_price',
+        search: value
+    }
+    const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
+    axios.get(restApi.url + "/products?" + query, { headers : restApi.headers })
+        .then(response => {
+            return response.data;
+        })
+        .then(data => {
+            this.setState({products: data.data})
+        })
+        .catch(error => {
+            console.log(error.response)
+        });
 
-    api.products.list({
-      limit: 50,
-      enabled: true,
-      discontinued: false,
-      fields: 'id,name,category_id,category_name,sku,enabled,discontinued,price,on_sale,regular_price',
-      search: value
-    }).then(productsResponse => {
-      this.setState({
-        products: productsResponse.json.data
-      });
-    });
+    // api.products.list({
+    //   limit: 50,
+    //   enabled: true,
+    //   discontinued: false,
+    //   fields: 'id,name,category_id,category_name,sku,enabled,discontinued,price,on_sale,regular_price',
+    //   search: value
+    // }).then(productsResponse => {
+    //   this.setState({
+    //     products: productsResponse.json.data
+    //   });
+    // });
   }
 
   render() {

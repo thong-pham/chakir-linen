@@ -16,9 +16,9 @@ export default class RelatedProducts extends React.PureComponent {
         : text.relatedProducts;
 
       return (
-        <section className="section section-product-related">
-          <div className="container">
-            <div className="title is-4 has-text-centered">{title}</div>
+        <section className="section section-product-related section-gray">
+          <div className="container border-section">
+            <div className="title-section is-4 has-text-centered">{title}</div>
             <CustomProducts
               ids={ids}
               sort={null}

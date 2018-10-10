@@ -1,10 +1,12 @@
 import React from 'react'
 import {Field, reduxForm} from 'redux-form'
 import {TextField, SelectField} from 'redux-form-material-ui'
+import axios from 'axios'
 
 import { CustomToggle } from 'modules/shared/form'
 import api from 'lib/api'
 import messages from 'lib/text'
+import settings from 'lib/settings'
 import style from './style.css'
 
 import Divider from 'material-ui/Divider';
@@ -34,9 +36,21 @@ class CustomerEditForm extends React.Component {
   }
 
   componentDidMount() {
-    api.customerGroups.list().then(({status, json}) => {
-      this.setState({groups: json});
-    })
+    const token = localStorage.getItem('dashboard_token');
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization' : 'Bearer ' + token
+    }
+    return axios.get(settings.apiBaseUrl + "/user_groups", { headers: headers })
+        .then(response => {
+            return response.data;
+        })
+        .then(data => {
+            this.setState({groups: data});
+        })
+        .catch(error => {
+            console.log(error.response);
+        });
   }
 
   render() {

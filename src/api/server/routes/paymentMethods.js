@@ -18,19 +18,23 @@ class PaymentMethodsRoute {
   }
 
   getMethods(req, res, next) {
-    PaymentMethodsService.getMethods(req.query).then(data => {
-      res.send(data)
-    }).catch(next);
+      PaymentMethodsService.getMethods(req.query).then(data => {
+          const methods = data.map(method => {
+              delete method.conditions;
+              return method;
+          })
+          res.status(200).send(methods);
+      }).catch(next);
   }
 
   getSingleMethod(req, res, next) {
-    PaymentMethodsService.getSingleMethod(req.params.id).then(data => {
-      if (data) {
-        res.send(data)
-      } else {
-        res.status(404).end()
-      }
-    }).catch(next);
+      PaymentMethodsService.getSingleMethod(req.params.id).then(data => {
+          if (data) {
+              res.send(data)
+          } else {
+              res.status(404).end()
+          }
+      }).catch(next);
   }
 
   addMethod(req, res, next) {

@@ -97,11 +97,11 @@ export default class Footer extends React.PureComponent {
                     <div className="footer-logo">
                       <img src={footerLogoUrl} alt="logo"/>
                     </div>
-                    <p>
+                    {/*<p>
                       <small>
                         {themeSettings.footer_about}
                       </small>
-                    </p>
+                    </p>*/}
                     <Contacts contacts={themeSettings.footer_contacts} />
                     <SocialIcons icons={themeSettings.footer_social} />
                   </div>

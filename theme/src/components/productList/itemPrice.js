@@ -3,7 +3,6 @@ import { themeSettings, text } from '../../lib/settings'
 import * as helper from '../../lib/helper'
 
 const FormattedCurrency = ({ number, settings }) => {
-
     const price = helper.formatCurrency(number, settings)
     return (
         <div>
@@ -13,6 +12,12 @@ const FormattedCurrency = ({ number, settings }) => {
         </div>
     )
 }
+
+const FormattedCurrencyForSale = ({ number, settings }) => {
+    return helper.formatCurrency(number, settings)
+}
+
+
 
 const ItemPrice = ({ product, settings }) => {
   let priceStyle = {};
@@ -37,12 +42,12 @@ const ItemPrice = ({ product, settings }) => {
     )
   } else if(product.on_sale) {
     return (
-      <div className="product-price">
+      <div className="product-price-large">
         <span className="product-new-price">
-          <FormattedCurrency settings={settings} number={product.price} />
+          <FormattedCurrencyForSale settings={settings} number={product.price} />
         </span>
         <del className="product-old-price">
-          <FormattedCurrency settings={settings} number={product.regular_price} />
+          <FormattedCurrencyForSale settings={settings} number={product.regular_price} />
         </del>
       </div>
     )

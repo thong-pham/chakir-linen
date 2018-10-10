@@ -39,9 +39,24 @@ export default class Header extends React.Component {
     }
   }
 
-  // componentDidMount () {
-  //     this.props.onLoad();
-  // }
+  componentDidMount () {
+      const { user_id } = this.props.state;
+      const order_id = localStorage.getItem('order_id');
+      if (order_id){
+          this.props.fetchCartById(order_id);
+      }
+      else if (user_id){
+          this.props.fetchUserData(user_id);
+          this.props.fetchCart(user_id);
+      }
+      else {
+          const id = JSON.parse(localStorage.getItem('user_id'));
+          if (id !== null){
+              this.props.fetchUserData(id);
+              this.props.fetchCart(id);
+          }
+      }
+  }
 
 
 
@@ -110,20 +125,39 @@ export default class Header extends React.Component {
     this.props.goBack();
   }
 
+  createCookie(name,value,days) {
+      var expires = "";
+      if (days) {
+          var date = new Date();
+          date.setTime(date.getTime() + (days*24*60*60*1000));
+          expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + value + expires + "; path=/";
+  }
+
+  eraseCookie(name) {
+      document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  }
+
   logOut = () => {
       localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('user_id');
+      //console.log(document.cookie);
+      //this.eraseCookie('order_id');
       this.props.logOut();
   }
 
 
+
+
   render() {
-    const {categories, cart, settings, currentPage, location, productFilter, token, user} = this.props.state;
+    const {categories, cart, settings, currentPage, location, productFilter, token, userInfo} = this.props.state;
+    //console.log(userInfo);
     //const { token, user} = this.state;
     const classToggle = this.state.mobileMenuIsActive ? 'navbar-burger is-hidden-tablet is-active' : 'navbar-burger is-hidden-tablet';
     const showBackButton = currentPage.type === 'product' && location.hasHistory;
     const imgSrc = '/assets/images/' + settings.logo_file;
-    
+
     return (
       <Fragment>
         <header className={this.state.mobileSearchIsActive ? 'search-active' : ''}>
@@ -141,7 +175,7 @@ export default class Header extends React.Component {
                 <Logo src={imgSrc} onClick={this.closeAll} alt="logo" />
               </div>
 
-              <div className="column is-4 has-text-centered">
+              <div className="column is-4 has-text-centered" style={{marginTop: '7px'}}>
                   <span className="icon icon-search is-hidden-tablet" onClick={this.searchToggle}>
                     <img src="/assets/images/search.svg" alt={text.search} title={text.search} style={{ minWidth: 24 }}/>
                   </span>
@@ -149,8 +183,8 @@ export default class Header extends React.Component {
               </div>
               <div className="column is-4 has-text-right header-block-right">
                 { (!token) ? <NavLink className="button is-success" to='/login'>Sign In</NavLink> :
-                             <NavLink className="button is-info" to='/account-2'>
-                                <p>Hello, {user.firstName}</p>
+                             <NavLink className="button is-info" to='/user-account'>
+                                {(userInfo) && <p>Hello, {userInfo.firstName}</p>}
                             </NavLink> }
                  {(token) ? <button type="button" className="button is-black" onClick={this.logOut}>Log Out</button> : null}
                 <CartIndicator cart={cart} onClick={this.cartToggle} cartIsActive={this.state.cartIsActive} />

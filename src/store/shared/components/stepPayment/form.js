@@ -7,6 +7,11 @@ import PaymentForm from '../paymentForm'
 const validateRequired = value => value && value.length > 0 ? undefined : text.required;
 
 export default class CheckoutStepPayment extends React.Component {
+
+  componentDidMount(){
+      this.props.onLoad();
+  }
+
   render() {
     const {
       cart,
@@ -18,21 +23,22 @@ export default class CheckoutStepPayment extends React.Component {
       buttonClassName,
       paymentMethods,
       loadingPaymentMethods,
-      savePaymentMethod
+      savePaymentMethod,
+      user
     } = this.props;
 
-    const { payment_method_gateway, grand_total } = cart;
+    const { payment_method_gateway, grand_total, id } = cart;
 
     if(!this.props.show){
       return (
         <div className="checkout-step">
-          <h1><span>4</span>{this.props.title}</h1>
+          <h1>{(user) ? <span>3</span> : <span>4</span>} {this.props.title}</h1>
         </div>
       )
     } else {
       return (
         <div className="checkout-step">
-          <h1><span>4</span>{this.props.title}</h1>
+          <h1>{(user) ? <span>3</span> : <span>4</span>} {this.props.title}</h1>
           <h2>{text.paymentMethods} {loadingPaymentMethods && <small>{text.loading}</small>}</h2>
           <div className="payment-methods">
             {paymentMethods.map((method, index) => <label key={index} className={'payment-method' + (method.id === cart.payment_method_id ? ' active': '')}>
@@ -55,6 +61,7 @@ export default class CheckoutStepPayment extends React.Component {
           <div className="checkout-button-wrap">
             {!processingCheckout &&
               <PaymentForm
+                order_id={id}
                 gateway={payment_method_gateway}
                 amount={grand_total}
                 shopSettings={settings}

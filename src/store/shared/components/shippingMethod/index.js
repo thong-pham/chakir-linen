@@ -5,12 +5,8 @@ import {reset, submit} from 'redux-form';
 import Form from './form'
 import {
   fetchShippingMethods,
-  updateCartShippingCountry,
-  updateCartShippingState,
-  updateCartShippingCity,
   updateCartShippingMethod,
   analyticsSetShippingMethod,
-  checkout,
   updateShipping,
   updateShippingPrice
 } from '../../actions'
@@ -29,7 +25,7 @@ const mapStateToProps = (state, ownProps) => {
     initialValues: state.app.cart,
     settings: state.app.settings,
     checkoutFields: state.app.checkoutFields,
-    processingCheckout: state.app.processingCheckout
+    user: state.app.userInfo
   }
 }
 
@@ -41,9 +37,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     },
     saveForm: (values) => {
       dispatch(submit('CheckoutShippingMethod'));
-    },
-    finishCheckout: (values) => {
-      dispatch(checkout(values, ownProps.history));
     },
     saveShippingMethod: (value, price) => {
       dispatch(updateCartShippingMethod(value, price));

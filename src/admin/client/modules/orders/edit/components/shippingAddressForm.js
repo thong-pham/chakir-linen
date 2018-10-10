@@ -37,7 +37,15 @@ class ShippingAddressForm extends React.Component {
 
   render() {
     let {handleSubmit, pristine, submitting, initialValues, onCancel, shippingMethod} = this.props;
-
+    const fields = [
+        {key: "full_name", label: "Full Name"},
+        {key: "address1", label: "Street Address"},
+        {key: "city", label: "City"},
+        {key: "state", label: "State/Province"},
+        {key: "country", label: "Country"},
+        {key: "postal_code", label: "Zip Code"},
+        {key: "phone", label: "Phone"}
+    ]
     let shippingFields = null;
     if(shippingMethod && shippingMethod.fields && shippingMethod.fields.length > 0){
       shippingFields = shippingMethod.fields.map((field, index) => {
@@ -52,21 +60,24 @@ class ShippingAddressForm extends React.Component {
         />
       })
     }
+    else {
+        shippingFields = fields.map((field, index) => {
+          const fieldLabel = getShippingFieldLabel(field);
+
+          return <Field
+            key={index}
+            component={TextField}
+            fullWidth={true}
+            name={field.key}
+            floatingLabelText={fieldLabel}
+          />
+        })
+    }
 
     return (
         <form onSubmit={handleSubmit}>
           <div>
             {shippingFields}
-            <Field component={TextField} fullWidth={true} name="city" floatingLabelText={messages.city}/>
-            <div className="row">
-              <div className="col-xs-6">
-                <Field component={TextField} fullWidth={true} name="state" floatingLabelText={messages.state}/>
-              </div>
-              <div className="col-xs-6">
-                <Field component={TextField} fullWidth={true} name="postal_code" floatingLabelText={messages.postal_code}/>
-              </div>
-            </div>
-            <Field component={TextField} fullWidth={true} name="country" floatingLabelText={messages.country}/>
           </div>
           <div className={style.shippingButtons}>
             <FlatButton

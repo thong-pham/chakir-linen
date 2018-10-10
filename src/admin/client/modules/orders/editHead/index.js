@@ -14,8 +14,9 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     onDelete: () => {
-      dispatch(deleteCurrentOrder());
-      ownProps.history.push('/admin/orders');
+      dispatch(deleteCurrentOrder()).then(data => {
+          ownProps.history.push('/admin/orders');
+      });      
     },
     setCancelled: (orderId) => {
       dispatch(cancelOrder(orderId));

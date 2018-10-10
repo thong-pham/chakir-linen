@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom';
 import { themeSettings, text } from '../lib/settings';
 import * as helper from '../lib/helper';
 
-const SummaryItem = ({ settings, item, updateCartItemQuantity }) => {
+const SummaryItem = ({ settings, item, updateCartItemQuantity, quantityView }) => {
 	const thumbnail = helper.getThumbnailUrl(
 		item.image_url,
 		themeSettings.cartThumbnailWidth
@@ -48,16 +48,27 @@ const SummaryItem = ({ settings, item, updateCartItemQuantity }) => {
 				)}
 				<div className="qty">
 					<span>{text.qty}:</span>
+					{/*(quantityView) ?
+						<span className="select is-small">
+							 <select
+									onChange={e => {
+										updateCartItemQuantity(item.id, e.target.value);
+									}}
+									value={item.quantity}
+								>
+								{qtyOptions}
+							</select>
+					</span> : <div><strong>{item.quantity}</strong></div>*/}
 					<span className="select is-small">
-						<select
-							onChange={e => {
-								updateCartItemQuantity(item.id, e.target.value);
-							}}
-							value={item.quantity}
-						>
+						 <select
+								onChange={e => {
+									updateCartItemQuantity(item.id, e.target.value);
+								}}
+								value={item.quantity}
+							>
 							{qtyOptions}
 						</select>
-					</span>
+				</span>
 				</div>
 			</div>
 			<div className="column is-3 has-text-right price">
@@ -76,7 +87,7 @@ SummaryItem.propTypes = {
 const OrderSummary = props => {
 	const {
 		updateCartItemQuantity,
-		state: { cart, settings }
+		state: { cart, settings, quantityView=true }
 	} = props;
 
 	if (cart && cart.items && cart.items.length > 0) {
@@ -86,6 +97,7 @@ const OrderSummary = props => {
 				item={item}
 				updateCartItemQuantity={updateCartItemQuantity}
 				settings={settings}
+				quantityView={quantityView}
 			/>
 		));
 

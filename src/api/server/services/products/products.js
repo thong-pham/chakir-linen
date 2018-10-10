@@ -65,7 +65,6 @@ class ProductsService {
       this.getAttributesIfNeeded(params, categories, matchTextQuery, projectQuery),
       SettingsService.getSettings()
     ]);
-
     const domain = generalSettings.domain || '';
     const ids = this.getArrayFromCSV(parse.getString(params.ids));
     const sku = this.getArrayFromCSV(parse.getString(params.sku));
@@ -275,6 +274,8 @@ class ProductsService {
       stock_preorder: 1,
       stock_backorder: 1,
       stock_quantity: 1,
+      reviews: 1,
+      rates: 1,
     	on_sale: {
     		$and: [
     			{
@@ -429,7 +430,7 @@ class ProductsService {
        let categoryChildren = [];
        CategoriesService.findAllChildren(categories, category_id, categoryChildren);
        queries.push({
-         '$or': [
+         $or: [
            {
              category_id: { $in: categoryChildren }
            }, {
@@ -560,6 +561,35 @@ class ProductsService {
     .then(res => res.modifiedCount > 0 ? this.getSingleProduct(id) : null)
   }
 
+  async addReview(id, data){
+      if(!ObjectID.isValid(id)) {
+        return Promise.reject('Invalid identifier');
+      }
+      const productObjectID = new ObjectID(id);
+      const newReview = this.getValidDocumentForAddReview(data);
+      const star = newReview.star;
+      await mongo.db.collection('products').updateOne({
+          _id: productObjectID,
+          'rates.star': star
+      }, {
+          $inc: {
+             'rates.$.value': 1
+          }
+      }
+    );
+      await mongo.db.collection('products').updateOne({
+        _id: productObjectID
+      }, {
+        $push: {
+            reviews: newReview
+        }
+      }
+    );
+    const reviewProduct = await this.getSingleProduct(id);
+    return Promise.resolve(reviewProduct);
+
+  }
+
   deleteProduct(productId) {
     if(!ObjectID.isValid(productId)) {
       return Promise.reject('Invalid identifier');
@@ -588,7 +618,30 @@ class ProductsService {
           'length': 0,
           'width': 0,
           'height': 0
-      }
+      },
+      'rates' : [
+        {
+            "star" : 1,
+            "value" : 0
+        },
+        {
+            "star" : 2,
+            "value" : 0
+        },
+        {
+            "star" : 3,
+            "value" : 0
+        },
+        {
+            "star" : 4,
+            "value" : 0
+        },
+        {
+            "star" : 5,
+            "value" : 0
+        }
+      ],
+      'reviews': []
     };
 
     product.name = parse.getString(data.name);
@@ -770,7 +823,41 @@ class ProductsService {
       product.category_ids = parse.getArrayOfObjectID(data.category_ids);
     }
 
+    if(data.rates !== undefined){
+       product.rates = parse.getArrayIfValid(data.rates) || [];
+    }
+
+    if(data.reviews !== undefined){
+       product.reviews = parse.getArrayIfValid(data.reviews) || [];
+    }
+
     return this.setAvailableSlug(product, id).then(product => this.setAvailableSku(product, id));
+  }
+
+  getValidDocumentForAddReview(data) {
+    let review = {
+      'id': new ObjectID(),
+      'date_reviewed': new Date(),
+      'user_id': parse.getObjectIDIfValid(data.user_id),
+    };
+
+    if (data.star) {
+      review.star = parse.getNumberIfPositive(data.star);
+    }
+
+    if (data.title){
+        review.title = parse.getString(data.title);
+    }
+
+    if (data.content){
+        review.content = parse.getString(data.content);
+    }
+
+    if (data.full_name) {
+        review.full_name = parse.getString(data.full_name);
+    }
+
+    return review;
   }
 
   getArrayOfObjectID(array) {

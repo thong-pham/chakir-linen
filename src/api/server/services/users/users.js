@@ -4,7 +4,6 @@ const mongo = require('../../lib/mongo');
 const utils = require('../../lib/utils');
 const parse = require('../../lib/parse');
 const webhooks = require('../../lib/webhooks');
-const handlebars = require('handlebars');
 const mailer = require('../../lib/mailer');
 const ObjectID = require('mongodb').ObjectID;
 const PasswordService = require('./passwordUtil');
@@ -14,10 +13,81 @@ const url = require('url');
 const UserGroupsService = require('./userGroups')
 const tokenService = require('../security/tokens')
 const security = require('../../lib/security');
+const settings = require('../../lib/settings');
+const SettingsService = require('../settings/settings');
 
 class UsersService {
   constructor() {}
 
+  async addSystemAccount(data){
+      const account = this.getValidDocumentForSystemAccount(data);
+      if (account.email && account.email.length > 0) {
+          const systemAccount = await mongo.db.collection('systemAccounts').count({email: account.email});
+          if(systemAccount > 0){
+            return Promise.reject('Account email must be unique')
+          }
+      }
+      else {
+          return Promise.reject('Invalid Email');
+      }
+
+      account.passwordHash = await PasswordService.generatePasswordHash(account.password);
+      delete account.password;
+      const insertResponse = await mongo.db.collection('systemAccounts').insertMany([account]);
+      const tokenName = account.name;
+      const dataToken = {
+          name: tokenName,
+          email: account.email,
+          scopes: [security.scope.ADMIN],
+          expiration: 720
+      }
+      const token = await tokenService.addToken(dataToken);
+      const newAccountId = insertResponse.ops[0]._id.toString();
+      const newAccount = await this.getSystemAccount(newAccountId);
+      return newAccount;
+
+  }
+
+  getSystemAccount(id){
+      if (!ObjectID.isValid(id)) {
+        return Promise.reject('Invalid identifier');
+      }
+      const accountId = new ObjectID(id);
+      return mongo.db.collection('systemAccounts').findOne({_id: accountId});
+  }
+
+  async loginSystem(data){
+      if (data.email && data.email.length > 0 && data.password && data.password.length > 0){
+          const account = await mongo.db.collection('systemAccounts').findOne({email: data.email});
+          if (!account){
+              return Promise.reject('This email does not exists. Please type again !')
+          }
+          else {
+               const isSame = await PasswordService.validatePasswordHash(data.password, account.passwordHash);
+               if (isSame){
+                     const tokenAndAccount = await tokenService.getSingleTokenByEmail(data.email).then(token => {
+                          if(token){
+                              return tokenService.getSignedToken(token).then(signedToken => {
+                                  account.id = account._id.toString();
+                                  delete account._id;
+                                  return {signedToken, account};
+                              });
+                          }
+                          else{
+                              return null;
+                          }
+                      });
+                      return Promise.resolve(tokenAndAccount);
+               }
+               else {
+                    return Promise.reject('This password is wrong. Please type again !');
+               }
+          }
+      }
+      else {
+          return Promise.reject('Invalid Email or Password');
+      }
+  }
 
 
   getFilter(params = {}) {
@@ -84,12 +154,27 @@ class UsersService {
     return this.getUsers({id: id}).then(items => items.data.length > 0 ? items.data[0] : {})
   }
 
-  async addUser(data) {
-      var user = this.getValidDocumentForInsert(data);
+  async addUser(req) {
+      const ip = tokenService.getIP(req);
+      const user_agent = tokenService.getUserAgent(req);
+      let data = req.body;
+      data.browser = {ip, user_agent};
+
+      const groups = await UserGroupsService.getGroups();
+
+      groups.forEach(group => {
+          if (group.name === data.customerType){
+              data.group_id = group.id;
+              data.approved = data.customerType !== 'Reseller' ? true : false;
+              delete data.customerType;
+          }
+      })
+
+      const user = this.getValidDocumentForInsert(data);
 
       // is email unique
       if (user.email && user.email.length > 0) {
-        const userCount = await mongo.db.collection('users').count({email: user.email});
+          const userCount = await mongo.db.collection('users').count({email: user.email});
           if(userCount > 0){
             return Promise.reject('Customer email must be unique')
           }
@@ -98,8 +183,7 @@ class UsersService {
           return Promise.reject('Invalid Email');
       }
 
-      const hash = await PasswordService.generatePasswordHash(user.password);
-      user.passwordHash = hash;
+      user.passwordHash = await PasswordService.generatePasswordHash(user.password);
       delete user.password;
       const insertResponse = await mongo.db.collection('users').insertMany([user]);
       const tokenName = user.firstName + " " + user.lastName;
@@ -109,14 +193,18 @@ class UsersService {
           scopes: [
               security.scope.READ_PRODUCTS,
               security.scope.READ_PRODUCT_CATEGORIES,
+              security.scope.WRITE_PRODUCTS,
               security.scope.READ_ORDERS,
+              security.scope.WRITE_ORDERS,
               security.scope.READ_USERS,
+              security.scope.WRITE_USERS,
               security.scope.READ_PAGES,
-              security.scope.READ_ORDER_STATUSES,
+              security.scope.READ_SITEMAP,
               security.scope.READ_SHIPPING_METHODS,
-              security.scope.READ_PAYMENT_METHODS
+              security.scope.READ_PAYMENT_METHODS,
+              security.scope.WRITE_PAYMENT_METHODS
           ],
-          expiration: 72
+          expiration: 720
       }
       const token = await tokenService.addToken(dataToken);
       const newUserId = insertResponse.ops[0]._id.toString();
@@ -138,9 +226,11 @@ class UsersService {
                else {
                    const isSame = await PasswordService.validatePasswordHash(data.password, user.passwordHash);
                    if (isSame){
-                         const token = await tokenService.getSingleTokenByEmail(data.email).then(token => {
+                         const tokenAndUser = await tokenService.getSingleTokenByEmail(data.email).then(token => {
                               if(token){
                                   return tokenService.getSignedToken(token).then(signedToken => {
+                                      user.id = user._id.toString();
+                                      delete user._id;
                                       return {signedToken, user};
                                   });
                               }
@@ -148,7 +238,19 @@ class UsersService {
                                   return null;
                               }
                           });
-                          return Promise.resolve(token);
+                          if (data.order_id && tokenAndUser.user.currentOrderId === null){
+                                const userObjectID = new ObjectID(tokenAndUser.user.id);
+                                const userData = {
+                                    currentOrderId: data.order_id
+                                }
+
+                                await mongo.db.collection('users').updateOne({
+                                  _id: userObjectID
+                                }, {
+                                  $set: userData
+                                });
+                          }
+                          return Promise.resolve(tokenAndUser);
                    }
                    else {
                         return Promise.reject('This password is wrong. Please type again !');
@@ -170,6 +272,14 @@ class UsersService {
       }
   }
 
+  approveCustomer(userId){
+      if (!ObjectID.isValid(userId)) {
+        return Promise.reject('Invalid identifier');
+      }
+      const userObjectID = new ObjectID(userId);
+      return mongo.db.collection('users').findOneAndUpdate({_id: userObjectID}, {$set:{"approved": true}});
+  }
+
   async addShippingAddress(userId, address) {
     if (!ObjectID.isValid(userId)) {
       return Promise.reject('Invalid identifier');
@@ -183,12 +293,21 @@ class UsersService {
     }
 
     return mongo.db.collection('users').updateOne({
-      _id: userObjectID
+      _id: userObjectID,
+      'shipping_addresses.default_shipping': true
     }, {
-        $push: {
-            shipping_addresses: validAddress
-          }
-      });
+      $set: {
+        'shipping_addresses.$.default_shipping': false
+      }
+    }).then(res => {
+      return mongo.db.collection('users').updateOne({
+        _id: userObjectID
+      }, {
+          $push: {
+              shipping_addresses: validAddress
+            }
+        });
+    });
   }
 
   deleteShippingAddress(userId, addressId) {
@@ -225,17 +344,17 @@ class UsersService {
   }
 
   updateShippingAddress(user_id, address_id, data) {
-    if (!ObjectID.isValid(user_id) || !ObjectID.isValid(address_id)) {
-      return Promise.reject('Invalid identifier');
-    }
-    let userObjectID = new ObjectID(user_id);
-    let addressObjectID = new ObjectID(address_id);
-    const addressFields = this.createObjectToUpdateAddressFields(data);
+      if (!ObjectID.isValid(user_id) || !ObjectID.isValid(address_id)) {
+        return Promise.reject('Invalid identifier');
+      }
+      let userObjectID = new ObjectID(user_id);
+      let addressObjectID = new ObjectID(address_id);
+      const addressFields = this.createObjectToUpdateAddressFields(data);
 
-    return mongo.db.collection('users').updateOne({
-      _id: userObjectID,
-      'shipping_addresses.id': addressObjectID
-    }, {$set: addressFields});
+      return mongo.db.collection('users').updateOne({
+        _id: userObjectID,
+        'shipping_addresses.id': addressObjectID
+      }, {$set: addressFields});
   }
 
 
@@ -271,9 +390,11 @@ class UsersService {
               return Promise.reject("This user does not exists");
          }
          else {
-             const isSame = await PasswordService.validatePasswordHash(data.password, userAccount.passwordHash);
-             if (!isSame){
-                  return Promise.reject("The current password is wrong");
+             if(data.password){
+                 const isSame = await PasswordService.validatePasswordHash(data.password, userAccount.passwordHash);
+                 if (!isSame){
+                      return Promise.reject("The current password is wrong");
+                 }
              }
          }
     }
@@ -337,6 +458,46 @@ class UsersService {
 
   }
 
+  addCurrentOrder(user_id, order_id){
+      if (!ObjectID.isValid(user_id) || !ObjectID.isValid(order_id)) {
+        return Promise.reject('Invalid identifier');
+      }
+      const userObjectID = new ObjectID(user_id);
+      const orderObjectID = new ObjectID(order_id);
+
+      return mongo.db.collection('users').updateOne({
+          _id: userObjectID
+      },{
+         $set: {
+           currentOrderId: orderObjectID
+         }
+      });
+  }
+
+  deleteCurrentOrder(user_id){
+      if (!ObjectID.isValid(user_id)) {
+        return Promise.reject('Invalid identifier');
+      }
+      const userObjectID = new ObjectID(user_id);
+
+      return mongo.db.collection('users').updateOne({
+          _id: userObjectID
+      },{
+         $set: {
+           currentOrderId: null
+         }
+      });
+  }
+
+  getCurrentOrder(user_id){
+      if (!ObjectID.isValid(user_id)){
+          return Promise.reject('Invalid identifier');
+      }
+      const userObjectID = new ObjectID(user_id);
+
+      return mongo.db.collection('users').findOne({_id: userObjectID}).then(user => user.currentOrderId);
+  }
+
   updateUserStatistics(userId, totalSpent, ordersCount) {
     if (!ObjectID.isValid(userId)) {
       return Promise.reject('Invalid identifier');
@@ -350,24 +511,41 @@ class UsersService {
     return mongo.db.collection('users').updateOne({_id: userObjectID}, {$set: userData});
   }
 
-  async deleteCustomer(customerId) {
-    if (!ObjectID.isValid(customerId)) {
+  async deleteUser(userId) {
+    if (!ObjectID.isValid(userId)) {
       return Promise.reject('Invalid identifier');
     }
-    const customerObjectID = new ObjectID(customerId);
-    const customer = await this.getSingleCustomer(customerId);
-    const deleteResponse = await mongo.db.collection('customers').deleteOne({'_id': customerObjectID});
-    await webhooks.trigger({ event: webhooks.events.CUSTOMER_DELETED, payload: customer });
+    const userObjectID = new ObjectID(userId);
+    const user = await this.getSingleUser(userId);
+    const deleteResponse = await mongo.db.collection('users').deleteOne({'_id': userObjectID});
+    await webhooks.trigger({ event: webhooks.events.USER_DELETED, payload: user });
     return deleteResponse.deletedCount > 0;
   }
 
+  getValidDocumentForSystemAccount(data){
+
+      let account = {
+        'date_created': new Date(),
+        'date_updated': null
+      };
+
+      account.email = parse.getString(data.email).toLowerCase();
+      account.name = parse.getString(data.name);
+      account.password = parse.getString(data.password);
+      account.role = parse.getString(data.role);
+
+      return account;
+  }
+
   getValidDocumentForInsert(data) {
+
     let customer = {
       'date_created': new Date(),
       'date_updated': null,
       'total_spent': 0,
       'orders_count': 0,
-      'verification': false
+      'verification': false,
+      'currentOrderId': null
     };
 
     customer.note = parse.getString(data.note);
@@ -386,6 +564,9 @@ class UsersService {
     customer.businessName = parse.getString(data.businessName);
     customer.businessPhone = parse.getString(data.businessPhone);
     customer.businessCategory = parse.getString(data.businessCategory);
+    customer.inState = parse.getBooleanIfValid(data.inState);
+    customer.license = parse.getBooleanIfValid(data.license);
+    customer.approved = parse.getBooleanIfValid(data.approved);
 
     return customer;
   }
@@ -450,6 +631,10 @@ class UsersService {
 
     if (data.shipping_addresses !== undefined) {
       customer.shipping_addresses = this.validateAddresses(data.shipping_addresses);
+    }
+
+    if (data.customerType !== undefined) {
+      customer.customerType = this.getString(data.customerType);
     }
 
     if (data.businessName !== undefined) {
@@ -561,6 +746,10 @@ class UsersService {
       fields['shipping_addresses.$.details'] = address.details;
     }
 
+    if (address.residential !== undefined){
+        fields['shipping_addresses.$.residential'] = parse.getBooleanIfValid(address.residential, false);
+    }
+
     if (address.default_billing !== undefined) {
       fields['shipping_addresses.$.default_billing'] = parse.getBooleanIfValid(address.default_billing, false);
     }
@@ -625,24 +814,14 @@ class UsersService {
     });
   }
 
-  getSigninMailBody() {
-    return `<div style="color: #202020; line-height: 1.5;">
-      Your email address {{email}} was just used to create an account<br />. Pleas verify it to get started:
-      <div style="padding: 60px 0px;"><a href="{{link}}" style="background-color: #3f51b5; color: #ffffff; padding: 12px 26px; font-size: 18px; border-radius: 28px; text-decoration: none;">Verify your email</a></div>
-      <b>Request from</b>
-      <div style="color: #727272; padding: 0 0 20px 0;">{{requestFrom}}</div>
-      If this was not you, you can safely ignore this email.<br /><br />
-      Best,<br />
-      Cezerin Robot`;
-  }
-
   async sendConfirmationEmail(req) {
-    const email = req.body.email;
+    const email = req.body.email || req.email;
     const userAgent = uaParser(req.get('user-agent'));
     const country = req.get('cf-ipcountry') || '';
-    const ip = this.getIP(req);
+    const ip = tokenService.getIP(req);
     const date = moment(new Date()).format('dddd, MMMM DD, YYYY h:mm A');
-    const link = 'http://localhost:3000/email-confirm/' + email;
+    const defaultDomain = await SettingsService.getSettings().then(generalSettings => generalSettings.domain);
+    const link = defaultDomain + '/email-confirm/' + email;
 
     if(link) {
       const linkObj = url.parse(link);
@@ -655,41 +834,14 @@ class UsersService {
 
       const message = {
         to: email,
-        subject: this.getTextFromHandlebars(this.getSigninMailSubject(), { from: userAgent.os.name }),
-        html: this.getTextFromHandlebars(this.getSigninMailBody(), { link, email, domain, requestFrom })
+        subject: tokenService.getTextFromHandlebars(tokenService.getSigninMailSubject(), { from: userAgent.os.name }),
+        html: tokenService.getTextFromHandlebars(tokenService.getSigninMailBody(), { link, email, domain, requestFrom })
       };
       const emailSent = await mailer.send(message);
       return { sent: emailSent, error: null };
     } else {
       return { sent: false, error: 'Access Denied' };
     }
-  }
-
-  getTextFromHandlebars(text, context) {
-    const template = handlebars.compile(text, { noEscape: true });
-    return template(context);
-  }
-
-  getSigninMailSubject() {
-    return 'New sign-up from {{from}}';
-  }
-
-  getIP(req) {
-    let ip = req.get('x-forwarded-for') || req.ip;
-
-    if(ip && ip.includes(', ')) {
-      ip = ip.split(', ')[0];
-    }
-
-    if(ip && ip.includes('::ffff:')) {
-      ip = ip.replace('::ffff:', '');
-    }
-
-    if(ip === '::1'){
-      ip = 'localhost';
-    }
-
-    return ip;
   }
 
 }

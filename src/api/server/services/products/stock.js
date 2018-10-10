@@ -47,6 +47,7 @@ class ProductStockService {
   }
 
   async changeStockQuantity(productId, variantId, quantity) {
+    //console.log(quantity);
     const product = await ProductsService.getSingleProduct(productId);
     if(product && this.isStockTrackingEnabled(product)) {
       // change product stock quantity
@@ -76,21 +77,21 @@ class ProductStockService {
   }
 
   isStockTrackingEnabled(product) {
-    return product.stock_tracking === true;
+      return product.stock_tracking === true;
   }
 
   isVariant(variantId) {
-    return variantId && variantId !== '';
+      return variantId && variantId !== '';
   }
 
   async getOrder(orderId) {
-    const filter = {
-      _id: new ObjectID(orderId),
-      draft: false
-    }
+      const filter = {
+        _id: new ObjectID(orderId),
+        draft: false
+      }
 
-    const order = await mongo.db.collection('orders').findOne(filter);
-    return order;
+      const order = await mongo.db.collection('orders').findOne(filter);
+      return order;
   }
 
   async getOrderItem(orderId, itemId) {

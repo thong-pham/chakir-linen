@@ -16,6 +16,12 @@ export {default as AccountContainer} from './containers/account'
 export {default as OrdersContainer} from './containers/orders'
 export {default as AddressContainer} from './containers/addresses'
 export {default as UserInfoContainer} from './containers/userInfo'
+export {default as ReviewContainer} from './containers/reviewProduct'
+export {default as ReviewSuccessContainer} from './containers/reviewSuccess'
+export {default as AboutUsContainer} from './containers/aboutUs'
+export {default as TermsOfServiceContainer} from './containers/termsOfService'
+export {default as ShippingPolicyContainer} from './containers/shippingPolicy'
+export {default as ReturnPolicyContainer} from './containers/returnPolicy'
 
 // combine all css files into one with webpack. Hack to deal with server side rendering.
 if(typeof window !== 'undefined'){

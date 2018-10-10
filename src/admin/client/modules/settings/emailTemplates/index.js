@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import { fetchEmailTemplate, updateEmailTemplate } from '../actions'
+import { fetchEmailTemplate, updateEmailTemplate, receiveEmailTemplate, addEmailTemplate } from '../actions'
 import Form from './components/form'
 
 const mapStateToProps = (state, ownProps) => {
@@ -12,10 +12,28 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     onLoad: () => {
       const {templateName} = ownProps.match.params;
-      dispatch(fetchEmailTemplate(templateName))
+      if (templateName !== 'add'){
+          dispatch(fetchEmailTemplate(templateName))
+      }
+      else {
+          const emailTemplate = {
+              name: '',
+              subject: '',
+              body: ''
+          }
+          dispatch(receiveEmailTemplate(emailTemplate));
+      }
+
     },
     onSubmit: (values) => {
-      dispatch(updateEmailTemplate(values));
+      if (values.id){
+          dispatch(updateEmailTemplate(values));
+      }
+      else {
+          dispatch(addEmailTemplate(values)).then(data => {
+              ownProps.history.push('/admin/settings/email')
+          })
+      }
     }
   }
 }

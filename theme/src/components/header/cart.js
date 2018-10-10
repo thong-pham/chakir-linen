@@ -5,7 +5,6 @@ import * as helper from '../../lib/helper'
 
 const CartItem = ({item, deleteCartItem, settings}) => {
   const thumbnail = helper.getThumbnailUrl(item.image_url, themeSettings.cartThumbnailWidth);
-
   return (
     <div className="columns is-mobile">
       <div className="column is-2">

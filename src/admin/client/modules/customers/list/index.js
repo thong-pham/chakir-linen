@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import { fetchCustomers, selectCustomer, deselectCustomer, selectAllCustomer, deselectAllCustomer, fetchMoreCustomers, fetchUsers } from '../actions'
+import { fetchCustomers, selectCustomer, deselectCustomer, selectAllCustomer, deselectAllCustomer, fetchMoreCustomers, fetchUsers, approveCustomer } from '../actions'
 import List from './components/list'
 
 const mapStateToProps = (state) => {
@@ -15,7 +15,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     onLoad: () => {
-      dispatch(fetchCustomers());
+        dispatch(fetchCustomers());
     },
     onSelect: (customerId, checked) => {
       if(checked) {
@@ -32,7 +32,11 @@ const mapDispatchToProps = (dispatch) => {
       }
     },
     loadMore: () => {
-      dispatch(fetchMoreCustomers());
+        dispatch(fetchMoreCustomers());
+    },
+
+    approveCustomer: (customer) => {
+        return dispatch(approveCustomer(customer));
     }
   }
 }

@@ -18,7 +18,8 @@ const ProductList = ({
   columnCountOnTablet,
   columnCountOnDesktop,
   columnCountOnWidescreen,
-  columnCountOnFullhd
+  columnCountOnFullhd,
+  userInfo
 }) => {
   if(!className || className === ''){
     className = 'columns is-multiline is-mobile products';
@@ -36,13 +37,14 @@ const ProductList = ({
         columnCountOnDesktop={columnCountOnDesktop}
         columnCountOnWidescreen={columnCountOnWidescreen}
         columnCountOnFullhd={columnCountOnFullhd}
+        userInfo={userInfo}
       />
     )
   }) : null;
 
   return (
     <Fragment>
-      <div className={className + (loadingProducts ? ' loading': '') + (isCentered ? ' is-centered' : '')}>
+      <div className={className + (loadingProducts ? ' loading': '') + (isCentered ? ' is-centered' : '')} style={{width: '100%', margin: '0px'}}>
         {items}
       </div>
       <div className="load-more">

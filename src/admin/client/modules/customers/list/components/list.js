@@ -10,17 +10,23 @@ import style from './style.css'
 
 export default class CustomersList extends React.Component {
     constructor(props){
-      super(props);
+        super(props);
     }
 
     componentDidMount(){
-      this.props.onLoad();
+        this.props.onLoad();
+    }
+
+    approveCustomer = (customer) => {
+        this.props.approveCustomer(customer).then(data => {
+              this.props.onLoad();
+        },this);
     }
 
     render(){
       const { items, selected, loadingItems, hasMore, onSelect, onSelectAll, loadMore, settings } = this.props;
       const rows = items.map((item, index) => (
-        <CustomersListItem key={index} customer={item} selected={selected} onSelect={onSelect} settings={settings} />
+        <CustomersListItem key={index} customer={item} selected={selected} onSelect={onSelect} settings={settings} approveCustomer={() => this.approveCustomer(item)}/>
       ));
 
       return (

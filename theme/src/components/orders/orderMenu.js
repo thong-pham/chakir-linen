@@ -21,7 +21,7 @@ export default class OrderMenu extends React.Component {
       if (type === 'Orders'){
           this.setState({allOrdersActive: true, shippingOrdersActive: false, deliveredOrdersActive: false, cancelledOrdersActive: false, processingOrdersActive: false});
       }
-      else if (type === 'Shipping Orders'){
+      else if (type === 'Shipped Orders'){
           this.setState({allOrdersActive: false, shippingOrdersActive: true, deliveredOrdersActive: false, cancelledOrdersActive: false, processingOrdersActive: false});
       }
       else if (type === 'Delivered Orders'){
@@ -49,7 +49,7 @@ export default class OrderMenu extends React.Component {
       <div className="tab">
         <button className={allOrdersActive ? 'active' : ''} onClick={() => this.orderNavigate('Orders')}>Orders</button>
         <button className={processingOrdersActive ? 'active' : ''} onClick={() => this.orderNavigate('Processing Orders')}>Processing Orders</button>
-        <button className={shippingOrdersActive ? 'active' : ''} onClick={() => this.orderNavigate('Shipping Orders')}>Shipping Orders</button>
+        <button className={shippingOrdersActive ? 'active' : ''} onClick={() => this.orderNavigate('Shipped Orders')}>Shipped Orders</button>
         <button className={deliveredOrdersActive ? 'active' : ''} onClick={() => this.orderNavigate('Delivered Orders')}>Delivered Orders</button>
         <button className={cancelledOrdersActive ? 'active' : ''} onClick={() => this.orderNavigate('Cancelled Orders')}>Cancelled Orders</button>
       </div>

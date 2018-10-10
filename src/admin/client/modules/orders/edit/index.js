@@ -1,6 +1,7 @@
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import { fetchOrder, updateOrder, deleteOrderItem, updateOrderItem, updateShippingAddress, clearOrderDetails, checkoutOrder } from '../actions'
+import { fetchOrder, updateOrder, deleteOrderItem, updateOrderItem, updateShippingAddress,
+         updateBillingAddress, clearOrderDetails, checkoutOrder, addCustomerForOrder } from '../actions'
 import OrderDetails from './components/details'
 
 const mapStateToProps = (state, ownProps) => {
@@ -14,23 +15,27 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     fetchData: () => {
-      const { orderId } = ownProps.match.params;
-      dispatch(fetchOrder(orderId));
+        const { orderId } = ownProps.match.params;
+        dispatch(fetchOrder(orderId));
     },
     clearData: () => {
-      dispatch(clearOrderDetails());
+        dispatch(clearOrderDetails());
     },
     onItemDelete: (itemId) => {
-      const { orderId } = ownProps.match.params;
-      dispatch(deleteOrderItem(orderId, itemId));
+        const { orderId } = ownProps.match.params;
+        dispatch(deleteOrderItem(orderId, itemId));
     },
-    onItemUpdate: (itemId, quantity, variantId) => {
-      const { orderId } = ownProps.match.params;
-      dispatch(updateOrderItem(orderId, itemId, quantity, variantId));
+    onItemUpdate: (itemId, quantity, variantId, itemPrice) => {
+        const { orderId } = ownProps.match.params;
+        dispatch(updateOrderItem(orderId, itemId, quantity, variantId, itemPrice));
     },
     onShippingAddressUpdate: (address) => {
-      const { orderId } = ownProps.match.params;
-      dispatch(updateShippingAddress(orderId, address));
+        const { orderId } = ownProps.match.params;
+        dispatch(updateShippingAddress(orderId, address));
+    },
+    onBillingAddressUpdate: (address) => {
+        const { orderId } = ownProps.match.params;
+        dispatch(updateBillingAddress(orderId, address));
     },
     onOrderSummaryUpdate: (order) => {
       const { orderId } = ownProps.match.params;
@@ -41,10 +46,38 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         shipping_method_id:  order.shipping_method_id,
         payment_method_id: order.payment_method_id,
         comments: order.comments,
-        note: order.note,
-        email: order.email,
-        mobile: order.mobile
+        note: order.note
       }));
+    },
+    updateCustomerInfo: (customer, orderId) => {
+        let shipping_address = null;
+        if (customer.shipping_addresses && customer.shipping_addresses.length > 0){
+            customer.shipping_addresses.forEach(address => {
+                if (address.default_shipping === true){
+                    shipping_address = {
+                        full_name: address.full_name,
+                        address1: address.address1,
+                        city: address.city,
+                        state: address.state,
+                        country: address.country,
+                        postal_code: address.postal_code,
+                        phone: address.phone
+                    };
+                }
+            })
+        }
+        const data = {
+            id: orderId,
+            userInfo: {
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                email: customer.email,
+                mobile: customer.mobile,
+                user_id: customer.id
+            },
+            shipping_address: shipping_address
+        }
+        dispatch(addCustomerForOrder(data));
     },
     onCheckout: () => {
       const { orderId } = ownProps.match.params;

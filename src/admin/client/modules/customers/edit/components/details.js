@@ -6,6 +6,7 @@ import style from './style.css'
 import CustomerSummary from './summary'
 import CustomerOrders from './orders'
 import CustomerAddresses from './addresses'
+import CustomerBusiness from './business'
 
 export default class CustomerDetails extends React.Component {
   constructor(props) {
@@ -23,7 +24,7 @@ export default class CustomerDetails extends React.Component {
   render() {
     const {customer, settings, onCustomerSummaryUpdate, onUpdateAddress, onDeleteAddress, onSetDefaultBillingAddress, onSetDefaultShippingAddress} = this.props;
     if (!customer)
-      return <br/>
+      return <div className="no-account">This customer does not have an account</div>
 
     return (
       <div className="row row--no-gutter col-full-height">
@@ -32,6 +33,12 @@ export default class CustomerDetails extends React.Component {
             customer={customer}
             settings={settings}
             onCustomerSummaryUpdate={onCustomerSummaryUpdate} />
+
+          {(customer.group_name === 'Reseller') &&
+            <CustomerBusiness
+              customer={customer}
+              settings={settings} />
+           }
 
           <CustomerAddresses
             customer={customer}

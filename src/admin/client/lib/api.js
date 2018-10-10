@@ -15,4 +15,5 @@ if(dashboardToken || DEVELOPER_MODE === true) {
   });
 }
 
-export default api;
+
+export default api

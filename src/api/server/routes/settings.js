@@ -17,6 +17,8 @@ class SettingsRoute {
     this.router.put('/v1/settings', security.checkUserScope.bind(this, security.scope.WRITE_SETTINGS), this.updateSettings.bind(this));
     this.router.get('/v1/settings/email', security.checkUserScope.bind(this, security.scope.READ_SETTINGS), this.getEmailSettings.bind(this));
     this.router.put('/v1/settings/email', security.checkUserScope.bind(this, security.scope.WRITE_SETTINGS), this.updateEmailSettings.bind(this));
+    this.router.get('/v1/settings/email/templates', security.checkUserScope.bind(this, security.scope.READ_SETTINGS), this.getEmailTemplates.bind(this));
+    this.router.post('/v1/settings/email/templates', security.checkUserScope.bind(this, security.scope.WRITE_SETTINGS), this.addEmailTemplate.bind(this));
     this.router.get('/v1/settings/email/templates/:name', security.checkUserScope.bind(this, security.scope.READ_SETTINGS), this.getEmailTemplate.bind(this));
     this.router.put('/v1/settings/email/templates/:name', security.checkUserScope.bind(this, security.scope.WRITE_SETTINGS), this.updateEmailTemplate.bind(this));
     this.router.get('/v1/settings/checkout/fields', security.checkUserScope.bind(this, security.scope.READ_SETTINGS), this.getCheckoutFields.bind(this));
@@ -55,6 +57,18 @@ class SettingsRoute {
       } else {
         res.status(404).end()
       }
+    }).catch(next);
+  }
+
+  addEmailTemplate(req, res, next) {
+      EmailTemplatesService.addEmailTemplate(req.body).then(data => {
+          res.send(data);
+      }).catch(next);
+  }
+
+  getEmailTemplates(req, res, next) {
+    EmailTemplatesService.getEmailTemplates().then(data => {
+      res.send(data)
     }).catch(next);
   }
 

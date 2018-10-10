@@ -26,6 +26,8 @@ const Price = ({ product, variant, isAllOptionsSelected, settings }) => {
 
   let price = 0;
   let oldPrice = 0;
+  let save = 0;
+  let percentSave = 0;
 
   if(product.variable && variant && variant.price > 0) {
     price = variant.price;
@@ -35,11 +37,16 @@ const Price = ({ product, variant, isAllOptionsSelected, settings }) => {
 
   if(product.on_sale) {
     oldPrice = product.regular_price;
+    save = oldPrice - price;
+    percentSave = Math.round((save * 100)/oldPrice);
   }
-
+  const percent = percentSave + '%'
   if(oldPrice > 0) {
     return (
-      <NewAndOldPrices settings={settings} newPrice={price} oldPrice={oldPrice} />
+      <div>
+        <NewAndOldPrices settings={settings} newPrice={price} oldPrice={oldPrice} />
+        <p>You save: <span style={{color: 'red'}}><FormattedCurrency settings={settings} number={save} /> ({percent})</span></p>
+      </div>
     )
   } else {
     return (

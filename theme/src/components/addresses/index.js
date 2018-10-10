@@ -19,13 +19,13 @@ class Addresses extends React.Component {
            this.props.history.push('/login');
        }
        else {
-           const { user } = this.props.state;
-           if (user){
-               this.props.fetchShippingAddress(user._id);
+           const { userInfo } = this.props.state;
+           if (userInfo){
+               this.props.fetchShippingAddress(userInfo.id);
            }
            else {
-               const userData = JSON.parse(localStorage.getItem('user'));
-               this.props.fetchShippingAddress(userData._id);
+               const id = JSON.parse(localStorage.getItem('user_id'));
+               this.props.fetchShippingAddress(id);
            }
        }
 
@@ -63,7 +63,7 @@ class Addresses extends React.Component {
 
    render(){
 
-       const { location, user, token, shippingAddresses } = this.props.state;
+       const { location, shippingAddresses } = this.props.state;
        const { openAddModal, openEditModal } = this.state;
        const {addAddressForm, editAddressForm} = this.props;
        //console.log(shippingAddresses);
@@ -94,10 +94,11 @@ class Addresses extends React.Component {
                   <div key={address.id} className={address.className}>
                     <div className="checkout-box" style={address.default_shipping ? {border: '3px solid red'} : {}}>
                          <strong>{address.full_name}</strong>
-                         <p>{address.address1}</p>
-                         <p>{address.city}, {address.state}, {address.postal_code}</p>
-                         <p>{address.country}</p>
-                         <p>{address.phone}</p>
+                         <div>{address.address1}</div>
+                         <div>{address.city}, {address.state}, {address.postal_code}</div>
+                         <div>{address.country}</div>
+                         <div>{address.phone}</div>
+                         {(address.residential) ? <div>Residential</div> : <div>Not Residential</div>}
                        <button type="button" className="button is-info" onClick={() => this.openEditModal(address.id)}>Edit</button> &nbsp; &nbsp;
                        <button type="button" className="button is-info" onClick={() => this.deleteAddress(address.id)}>Delete</button> &nbsp; &nbsp;
                        {(!address.default_shipping) ? <button type="button" className="button is-info" onClick={() => this.setAsDefault(address.id)}>Set as Default</button> : null}

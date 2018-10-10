@@ -234,18 +234,18 @@ class SecurityTokensService {
   }
 
   getSigninMailSubject() {
-    return 'New sign-in from {{from}}';
+    return 'New sign-up from {{from}} for Chakir Linen account';
   }
 
   getSigninMailBody() {
     return `<div style="color: #202020; line-height: 1.5;">
-      Your email address {{email}} was just used to request<br />a sign in email to {{domain}} dashboard.
-      <div style="padding: 60px 0px;"><a href="{{link}}" style="background-color: #3f51b5; color: #ffffff; padding: 12px 26px; font-size: 18px; border-radius: 28px; text-decoration: none;">Click here to sign in</a></div>
+      Your email address {{email}} was just used to create an account<br />. Please verify it to get started:
+      <div style="padding: 60px 0px;"><a href="{{link}}" style="background-color: #3f51b5; color: #ffffff; padding: 12px 26px; font-size: 18px; border-radius: 28px; text-decoration: none;">Verify your email</a></div>
       <b>Request from</b>
       <div style="color: #727272; padding: 0 0 20px 0;">{{requestFrom}}</div>
       If this was not you, you can safely ignore this email.<br /><br />
-      Best,<br />
-      Cezerin Robot`;
+      Best Regards,<br />
+      Chakir Linen`;
   }
 
   async sendDashboardSigninUrl(req) {

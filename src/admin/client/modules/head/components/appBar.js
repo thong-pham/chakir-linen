@@ -15,6 +15,7 @@ import PaymentMethodHead from 'modules/settings/paymentsEdit/head'
 import PaymentMethodListHead from 'modules/settings/payments/head'
 import ShippingMethodHead from 'modules/settings/shippingEdit/head'
 import ShippingMethodListHead from 'modules/settings/shipping/head'
+import EmailTemplateListHead from 'modules/settings/email/head'
 import PageHead from 'modules/pages/edit/head'
 import PageListHead from 'modules/pages/list/head'
 import TokenListHead from 'modules/settings/tokens/list/head'
@@ -126,13 +127,34 @@ export default class AppBarTop extends React.Component {
     }
     else if(pathname === '/admin/settings/email'){
       title = messages.settings_emailSettings;
+      rightElements = <EmailTemplateListHead />
     }
     else if(pathname === '/admin/settings/email/smtp'){
       title = messages.settings_smtpSettings;
       leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
     }
+    else if(pathname === '/admin/settings/email/templates/add'){
+      title = messages.settings_addEmailTemplate;
+      leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
+    }
     else if(pathname === '/admin/settings/email/templates/order_confirmation'){
       title = messages.settings_orderConfirmation;
+      leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
+    }
+    else if(pathname === '/admin/settings/email/templates/shipping_confirmation'){
+      title = messages.settings_shippingConfirmation;
+      leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
+    }
+    else if(pathname === '/admin/settings/email/templates/delivered_confirmation'){
+      title = messages.settings_deliveredConfirmation;
+      leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
+    }
+    else if(pathname === '/admin/settings/email/templates/cancelled_confirmation'){
+      title = messages.settings_cancelledConfirmation;
+      leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
+    }
+    else if(pathname === '/admin/settings/email/templates/account_confirmation'){
+      title = messages.settings_accountConfirmation;
       leftButton = <Link to="/admin/settings/email"><IconButton><FontIcon color="#fff" className="material-icons">arrow_back</FontIcon></IconButton></Link>
     }
     else if(pathname === '/admin/settings/email/templates/customer_registration'){

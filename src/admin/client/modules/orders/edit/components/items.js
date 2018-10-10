@@ -14,6 +14,7 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import SelectField from 'material-ui/SelectField';
 import Dialog from 'material-ui/Dialog';
+import TextField from 'material-ui/TextField'
 
 const iconButtonElement = (
   <IconButton touch={true}>
@@ -59,7 +60,8 @@ export class OrderItem extends React.Component {
       variantId: props.item.variant_id,
       selectedOptions: this.getOptionsByVariant(),
       selectedVariant: this.getCurrentVariant(),
-      showEdit: false
+      showEdit: false,
+      itemPrice: props.item.price
     };
   }
 
@@ -78,7 +80,7 @@ export class OrderItem extends React.Component {
   submitEditForm = () => {
     this.hideEditForm();
     const newVariantId = this.state.selectedVariant && this.state.selectedVariant.id ? this.state.selectedVariant.id : this.state.variantId;
-    this.props.onItemUpdate(this.props.item.id, this.state.quantity, newVariantId);
+    this.props.onItemUpdate(this.props.item.id, this.state.quantity, newVariantId, this.state.itemPrice);
   };
 
   deleteItem = () => {
@@ -141,6 +143,10 @@ export class OrderItem extends React.Component {
     return selectedOptions;
   }
 
+  priceChange = (e) => {
+      this.setState({itemPrice: e.target.value});
+  }
+
   render() {
     const {item, settings, allowEdit} = this.props;
 
@@ -157,7 +163,7 @@ export class OrderItem extends React.Component {
       />,
     ];
 
-    let {quantity} = this.state;
+    let {quantity, itemPrice} = this.state;
     const {selectedOptions, selectedVariant} = this.state;
     const product = item.product;
     const price = helper.formatCurrency(item.price, settings);
@@ -237,6 +243,12 @@ export class OrderItem extends React.Component {
               onChange={this.quantityChange}>
               {quantityItems}
             </SelectField>
+            <TextField
+               floatingLabelText={messages.products_price}
+               fullWidth={true}
+               value={itemPrice}
+               onChange={this.priceChange}
+             />
           </div>
         </Dialog>
       </div>

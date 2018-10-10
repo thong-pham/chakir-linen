@@ -9,8 +9,8 @@ export default class ViewedProducts extends React.Component {
   static propTypes = {
 		limit: PropTypes.number.isRequired,
 		settings: PropTypes.shape({}).isRequired,
-		addCartItem: PropTypes.func.isRequired,
-		product: PropTypes.shape({}).isRequired
+		addCartItem: PropTypes.func.isRequired
+		//product: PropTypes.shape({}).isRequired
 	};
 
 	state = {
@@ -71,25 +71,26 @@ export default class ViewedProducts extends React.Component {
   }
 
   render() {
-    const { limit, settings, addCartItem, product } = this.props;
+    const { limit, settings, addCartItem, userInfo } = this.props;
     let { viewedProducts } = this.state;
 
-    if(viewedProducts && product && product.id){
-      viewedProducts = viewedProducts.filter(id => id !== product.id);
-    }
+    // if(viewedProducts && product && product.id){
+    //   viewedProducts = viewedProducts.filter(id => id !== product.id);
+    // }
 
     if(viewedProducts && viewedProducts.length > 0){
       const ids = viewedProducts.reverse().slice(0, limit);
       return (
-        <section className="section section-product-related">
-          <div className="container">
-            <div className="title is-4 has-text-centered">{text.recentlyViewed}</div>
+        <section className="section section-product-related section-gray" style={{paddingTop: '0px'}}>
+          <div className="container border-section">
+            <div className="title-section is-4 has-text-centered">{text.recentlyViewed}</div>
             <CustomProductList
               ids={ids}
               settings={settings}
               addCartItem={addCartItem}
               limit={limit}
               isCentered
+              userInfo={userInfo}
             />
           </div>
         </section>

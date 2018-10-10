@@ -20,7 +20,7 @@
   "state": "State/Province",
   "city": "City",
   "fullName": "Full name",
-  "address1": "Address line 1",
+  "address1": "Street Address",
   "address2": "Address line 2",
   "postal_code": "Postal code",
   "phone": "Phone",
@@ -46,5 +46,8 @@
   "carrierCode": "Carrier Code",
   "serviceCode": "Service Code",
   "saveChange": "Save Changes",
-  "account": "Your Account"
+  "account": "Your Account",
+  "customerType": "Register as a:",
+  "regularCustomer": "Reguler Customer",
+  "reseller": "Reseller"
 }

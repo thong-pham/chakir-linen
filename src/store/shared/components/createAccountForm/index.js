@@ -11,17 +11,18 @@ const mapStateToProps = (state, ownProps) => {
     settings: state.app.settings,
     themeSettings: state.app.themeSettings,
     checkoutFields: state.app.checkoutFields,
+    creatingUserError: state.app.creatingUserError
   }
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     onSubmit: (values) => {
-      console.log(values);
-      dispatch(createAccount(values, ownProps.history));
+       //console.log(values);
+       dispatch(createAccount(values, ownProps.history));
     },
     saveForm: (values) => {
-      dispatch(submit('CreateAccountForm'));
+       dispatch(submit('CreateAccountForm'));
     },
     onLoad: () => {}
   }

@@ -2,7 +2,7 @@ import queryString from 'query-string'
 import {getJSONLD} from './lib/jsonld'
 import {addCartItem, deleteCartItem, updateCartItemQuantity, fetchMoreProducts, setSort,
         fetchTokenAndUser, fetchOrders, fetchShippingAddress, deleteShippingAddress, editShippingAddress,
-        setDefaultShipping, fetchUserData, saveUserData, changePassword } from './actions'
+        setDefaultShipping, fetchUserData, saveUserData, changePassword, reviewProduct, addReview, fetchCart, fetchCartById, hideDeal, clearCookie, hideQuantity } from './actions'
 
 const setQuery = (history, query) => {
   if(history && history.location){
@@ -102,12 +102,20 @@ export const mapDispatchToProps = (dispatch, ownProps) => {
       return getJSONLD(state);
     },
 
+    fetchCart: (id) => {
+        dispatch(fetchCart(id));
+    },
+
     // onLoad: () => {
     //     dispatch(fetchTokenAndUser());
     // },
 
     fetchOrders: (id) => {
         dispatch(fetchOrders(id));
+    },
+
+    fetchCartById: (id) => {
+        dispatch(fetchCartById(id));
     },
 
     fetchShippingAddress: (id) => {
@@ -140,6 +148,28 @@ export const mapDispatchToProps = (dispatch, ownProps) => {
 
     searchOrder: (words) => {
         dispatch(searchOrder(words));
+    },
+
+    reviewProduct: (item) => {
+        dispatch(reviewProduct(item));
+    },
+
+    addReview: (data) => {
+        dispatch(addReview(data)).then(data => {
+            ownProps.history.push("/products/review-success");
+        });
+    },
+
+    hideDeal: () => {
+        dispatch(hideDeal());
+    },
+
+    clearCookie: () => {
+        dispatch(clearCookie());
+    },
+
+    hideQuantity: () => {
+        dispatch(hideQuantity());
     }
 
   }

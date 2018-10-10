@@ -19,7 +19,18 @@ db.pages.insertMany([
   {slug: 'login', meta_title: 'Login', enabled: true, is_system: true},
   {slug: 'logout', meta_title: 'Logout', enabled: true, is_system: true},
   {slug: 'register', meta_title: 'Register', enabled: true, is_system: true},
-  {slug: 'account', meta_title: 'Account', enabled: true, is_system: true}
+  {slug: 'email-confirm', meta_title: 'Email Confirmation', enabled: true, is_system: true},
+  {slug: 'user-account', meta_title: 'Your Account', enabled: true, is_system: true},
+  {slug: 'account/orders', meta_title: 'Your Orders', enabled: true, is_system: true},
+  {slug: 'account/userInfo', meta_title: 'Your Profile', enabled: true, is_system: true},
+  {slug: 'account/addresses', meta_title: 'Your Addresses', enabled: true, is_system: true},
+  {slug: 'account/payments', meta_title: 'Your Payments', enabled: true, is_system: true},
+  {slug: 'products/review-your-purchases', meta_title: 'Review Your Purchases', enabled: true, is_system: true},
+  {slug: 'products/review-success', meta_title: 'Review Success', enabled: true, is_system: true},
+  {slug: 'about-our-company', meta_title: 'About Our Company', enabled: true, is_system: false},
+  {slug: 'terms-of-service', meta_title: 'Terms of Service', enabled: true, is_system: false},
+  {slug: 'shipping-policy', meta_title: 'Shipping Policy', enabled: true, is_system: false},
+  {slug: 'return-policy', meta_title: 'Return Policy', enabled: true, is_system: false}
 ]);
 ```
 
@@ -29,9 +40,9 @@ db.pages.insertMany([
 db.tokens.insert({
   is_revoked: false,
   date_created: new Date(),
-  expiration: 72,
-  name: 'Owner',
-  email: 'email@domain.com',
+  expiration: 720,
+  name: 'admin',
+  email: 'admin@chakirhospitality.com',
   scopes: ['admin']  
 });
 ```
@@ -40,12 +51,12 @@ db.tokens.insert({
 
 ```js
 db.emailSettings.insert({
-  host: 'smtp.domain.com',
+  host: 'smtp.sendgrid.net',
   port: 465,
-  user: '',
-  pass: '',
-  from_name: 'Store',
-  from_address: 'email@domain.com'
+  user: 'apikey',
+  pass: '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',
+  from_name: 'Admin',
+  from_address: 'admin@chakirhospitality.com'
 });
 ```
 
@@ -54,7 +65,7 @@ db.emailSettings.insert({
 ```js
 db.settings.insert({
   domain: 'http://localhost:3000',
-  logo_file: null,
+  logo_file: 'logo.png',
   language: 'en',
   currency_code: 'USD',
   currency_symbol: '$',
@@ -62,15 +73,15 @@ db.settings.insert({
   thousand_separator: ',',
   decimal_separator: '.',
   decimal_number: 2,
-  timezone: 'Asia/Singapore',
+  timezone: 'US/Pacific',
   date_format: 'MMMM D, YYYY',
   time_format: 'h:mm a',
-  default_shipping_country: 'SG',
+  default_shipping_country: 'US',
   default_shipping_state: '',
   default_shipping_city: '',
   default_product_sorting: 'stock_status,price,position',
-  weight_unit: 'kg',
-  length_unit: 'cm',
+  weight_unit: 'lb',
+  length_unit: 'in',
   hide_billing_address: false
 });
 ```
@@ -91,16 +102,17 @@ db.products.createIndex({
   'name': 'text',
   'description': 'text'
 }, { default_language: 'english', name: 'textIndex' });
-db.customers.createIndex({ group_id: 1 });
-db.customers.createIndex({ email: 1 });
-db.customers.createIndex({ mobile: 1 });
-db.customers.createIndex({
-  'full_name': 'text',
-  'addresses.address1': 'text'
+db.users.createIndex({ group_id: 1 });
+db.users.createIndex({ email: 1 });
+db.users.createIndex({ mobile: 1 });
+db.users.createIndex({
+  'firstName': 'text',
+  'lastName': 'text',
+  'shipping_addresses.address1': 'text'
 }, { default_language: 'english', name: 'textIndex' });
 db.orders.createIndex({ draft: 1 });
 db.orders.createIndex({ number: 1 });
-db.orders.createIndex({ customer_id: 1 });
+db.orders.createIndex({ user_id: 1 });
 db.orders.createIndex({ email: 1 });
 db.orders.createIndex({ mobile: 1 });
 db.orders.createIndex({

@@ -1,8 +1,9 @@
 import React from 'react'
-import api from '../../../client/api'
+import storeSettings from '../../../client/settings'
 import PayPalCheckout from './PayPalCheckout'
 import LiqPay from './LiqPay'
 import StripeElements from './StripeElements'
+import axios from 'axios'
 
 export default class PaymentForm extends React.Component {
   constructor(props) {
@@ -14,24 +15,33 @@ export default class PaymentForm extends React.Component {
   }
 
   fetchFormSettings = () => {
-    this.setState({
-      loading: true
-    });
+    this.setState({ loading: true });
 
-    api.ajax.paymentFormSettings.retrieve().then(({ status, json }) => {
-      this.setState({
-        formSettings: json,
-        loading: false
-      });
-    })
-    .catch(e => {
-      this.setState({
-        formSettings: null,
-        loading: false
-      });
-      console.log(e);
-    });
-  }
+    const { order_id } = this.props;
+
+    axios.get(storeSettings.ajaxBaseUrl + "/payment_form_settings/" + order_id)
+            .then(response => {
+                this.setState({ formSettings: response.data, loading: false })
+            })
+            .catch(error => {
+                this.setState({ formSettings: null,loading: false })
+                console.log(error);
+            })
+
+      // api.ajax.paymentFormSettings.retrieve().then(({ status, json }) => {
+      //   this.setState({
+      //     formSettings: json,
+      //     loading: false
+      //   });
+      // })
+      // .catch(e => {
+      //   this.setState({
+      //     formSettings: null,
+      //     loading: false
+      //   });
+      //   console.log(e);
+      // });
+    }
 
   componentDidMount() {
     this.fetchFormSettings();

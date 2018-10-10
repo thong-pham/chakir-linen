@@ -15,11 +15,12 @@ import Price from './price'
 import Quantity from './quantity'
 import RelatedProducts from './relatedProducts'
 import Tags from './tags'
+import CustomerReviews from './customerReviews'
 
 const Fragment = React.Fragment;
 
 const Description = ({ description }) => (
-  <div className="product-content" dangerouslySetInnerHTML={{__html: description}}/>
+  <div className="product-content" dangerouslySetInnerHTML={{__html: description}} />
 )
 
 export default class ProductDetails extends React.Component {
@@ -30,7 +31,8 @@ export default class ProductDetails extends React.Component {
       selectedVariant: null,
       isAllOptionsSelected: false,
       quantity: 1,
-      images: []
+      images: [],
+
     }
 
     this.onOptionChange = this.onOptionChange.bind(this);
@@ -126,7 +128,6 @@ export default class ProductDetails extends React.Component {
   render() {
     const {product, settings, categories} = this.props;
     const { images } = this.state;
-    //console.log(images);
     const {selectedVariant, isAllOptionsSelected} = this.state;
     const maxQuantity = product.stock_status === 'discontinued' ?
       0 :
@@ -174,6 +175,7 @@ export default class ProductDetails extends React.Component {
               <div className="content">
                 <div className="columns">
                   <div className="column is-7">
+                    <h2>Description</h2>
                     <Description description={product.description} />
                   </div>
                   <div className="column is-5">
@@ -191,6 +193,12 @@ export default class ProductDetails extends React.Component {
             limit={10}
           />
 
+          <CustomerReviews
+              settings={settings}
+              rates={product.rates}
+              reviews={product.reviews}
+          />
+
           {themeSettings.show_viewed_products &&
             <ViewedProducts
               settings={settings}
@@ -200,7 +208,9 @@ export default class ProductDetails extends React.Component {
             />
           }
 
-          {themeSettings.disqus_shortname && themeSettings.disqus_shortname !== '' &&
+
+
+        {/*themeSettings.disqus_shortname && themeSettings.disqus_shortname !== '' &&
             <section className="section">
               <div className="container">
                 <Disqus
@@ -211,7 +221,7 @@ export default class ProductDetails extends React.Component {
                 />
               </div>
             </section>
-          }
+          */}
         </Fragment>
       )
     } else {

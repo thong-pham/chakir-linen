@@ -136,8 +136,8 @@ class CustomerAddress extends React.Component {
 }
 
 const CustomerAddresses = ({customer, settings, onUpdateAddress, onDeleteAddress, onSetDefaultBillingAddress, onSetDefaultShippingAddress}) => {
-  if(customer && customer.addresses && customer.addresses.length > 0){
-    const addresses = customer.addresses.map((address, index) =>
+  if(customer && customer.shipping_addresses && customer.shipping_addresses.length > 0){
+    const addresses = customer.shipping_addresses.map((address, index) =>
     <CustomerAddress
       key={index}
       address={address}

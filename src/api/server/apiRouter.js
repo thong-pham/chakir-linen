@@ -24,6 +24,7 @@ const AppsRoute = require('./routes/apps');
 const WebhooksRoute = require('./routes/webhooks');
 const PaymentsRoute = require('./routes/payments');
 const UsersRoute = require('./routes/users');
+const UserGroupsRoute = require('./routes/userGroups');
 
 new ProductsRoute(apiRouter);
 new ProductCategoriesRoute(apiRouter);
@@ -46,5 +47,6 @@ new AppsRoute(apiRouter);
 new WebhooksRoute(apiRouter);
 new PaymentsRoute(apiRouter);
 new UsersRoute(apiRouter);
+new UserGroupsRoute(apiRouter);
 
 module.exports = apiRouter;

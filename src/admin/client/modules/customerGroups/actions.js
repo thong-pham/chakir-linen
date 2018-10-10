@@ -1,6 +1,8 @@
 import * as t from './actionTypes'
 import api from 'lib/api'
+import restApi from 'lib/restApi'
 import messages from 'lib/text'
+import axios from 'axios'
 
 function requestGroups() {
   return {
@@ -66,24 +68,22 @@ function successDeleteGroup(id) {
   }
 }
 
+
+
 function fetchGroups() {
   return dispatch => {
     dispatch(requestGroups());
-    return api.customerGroups.list()
-      .then(({status, json}) => {
-        json = json.sort((a,b) => (a.position - b.position ));
-
-        json.forEach((element, index, theArray) => {
-          if(theArray[index].name === '') {
-            theArray[index].name = `<${messages.draft}>`;
-          }
-        })
-
-        dispatch(receiveGroups(json))
+    return axios.get(restApi.url + "/user_groups", { headers: restApi.headers })
+      .then(response => {
+          let data = response.data.sort((a,b) => (a.position - b.position ));
+          data.forEach((element, index, theArray) => {
+              if(theArray[index].name === '') {
+                theArray[index].name = `<${messages.draft}>`;
+              }
+          })
+          dispatch(receiveGroups(data))
       })
-      .catch(error => {
-          dispatch(receiveErrorGroups(error));
-      });
+      .catch(error => { dispatch(receiveErrorGroups(error)) })
   }
 }
 
@@ -107,47 +107,39 @@ export function fetchGroupsIfNeeded() {
 export function updateGroup(data) {
   return (dispatch, getState) => {
     dispatch(requestUpdateGroup(data.id));
-    return api.customerGroups.update(data.id, data)
-      .then(({status, json}) => {
+    return axios.put(restApi.url + "/user_groups/" + data.id, data, { headers: restApi.headers })
+      .then(response => {
           dispatch(receiveUpdateGroup());
           dispatch(fetchGroups());
       })
-      .catch(error => {
-          dispatch(errorUpdateGroup(error));
-      });
+      .catch(error => { dispatch(errorUpdateGroup(error)) });
   }
 }
 
 export function createGroup(data) {
-  return (dispatch, getState) => {
-    return api.customerGroups.create(data)
-      .then(({status, json}) => {
-          dispatch(successCreateGroup(json.id));
-          dispatch(fetchGroups());
-          dispatch(selectGroup(json.id));
-      })
-      .catch(error => {
-          //dispatch error
-          console.log(error)
-      });
-  }
+   return (dispatch, getState) => {
+      return axios.post(restApi.url + "/user_groups", data, { headers: restApi.headers })
+        .then(response => {
+            dispatch(successCreateGroup(response.data.id));
+            dispatch(fetchGroups());
+            dispatch(selectGroup(response.data.id));
+        })
+        .catch(error => { console.log(error.response) })
+    }
 }
 
 export function deleteGroup(id) {
   return (dispatch, getState) => {
-    return api.customerGroups.delete(id)
-      .then(({status, json}) => {
-        if(status === 200) {
-          dispatch(successDeleteGroup(id));
-          dispatch(deselectGroup());
-          dispatch(fetchGroups());
-        } else {
-          throw status
-        }
+    return axios.delete(restApi.url + "/user_groups/" + id, { headers: restApi.headers })
+      .then(response => {
+          if(response.status === 200) {
+            dispatch(successDeleteGroup(id));
+            dispatch(deselectGroup());
+            dispatch(fetchGroups());
+          } else {
+            console.log(response.status);
+          }
       })
-      .catch(error => {
-          //dispatch error
-          console.log(error)
-      });
+      .catch(error => { console.log(error.response) })
   }
 }

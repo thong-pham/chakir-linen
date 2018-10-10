@@ -101,60 +101,60 @@ export default class Buttons extends React.Component {
         } else {
           menuItems.push(<MenuItem key="hold" primaryText={messages.holdOrder} onClick={this.holdOrder} />);
         }
-        menuItems.push(<MenuItem key="close" primaryText={messages.closeOrder} onClick={this.showClose} />);
-        menuItems.push(<MenuItem key="cancel" primaryText={messages.cancelOrder} onClick={this.showCancel} />);
+        //menuItems.push(<MenuItem key="close" primaryText={messages.closeOrder} onClick={this.showClose} />);
+        //menuItems.push(<MenuItem key="cancel" primaryText={messages.cancelOrder} onClick={this.showCancel} />);
       }
 
       return (
-        <span>
-          <ProductSearchDialog
-            open={this.state.showAddItem}
-            title={messages.addOrderItem}
-            settings={settings}
-            onSubmit={this.addItem}
-            onCancel={this.hideAddItem}
-            submitLabel={messages.add}
-            cancelLabel={messages.cancel}
-          />
+         <span>
+            <ProductSearchDialog
+              open={this.state.showAddItem}
+              title={messages.addOrderItem}
+              settings={settings}
+              onSubmit={this.addItem}
+              onCancel={this.hideAddItem}
+              submitLabel={messages.add}
+              cancelLabel={messages.cancel}
+            />
 
-          <ConfirmationDialog
-            open={this.state.showClose}
-            title={orderName}
-            description={messages.closeOrderConfirmation}
-            onSubmit={this.setClosed}
-            onCancel={this.hideClose}
-            submitLabel={messages.closeOrder}
-            cancelLabel={messages.cancel}
-          />
+            <ConfirmationDialog
+              open={this.state.showClose}
+              title={orderName}
+              description={messages.closeOrderConfirmation}
+              onSubmit={this.setClosed}
+              onCancel={this.hideClose}
+              submitLabel={messages.closeOrder}
+              cancelLabel={messages.cancel}
+            />
 
-          <ConfirmationDialog
-            open={this.state.showCancel}
-            title={orderName}
-            description={messages.cancelOrderConfirmation}
-            onSubmit={this.setCancelled}
-            onCancel={this.hideCancel}
-            submitLabel={messages.cancelOrder}
-            cancelLabel={messages.cancel}
-          />
+            <ConfirmationDialog
+              open={this.state.showCancel}
+              title={orderName}
+              description={messages.cancelOrderConfirmation}
+              onSubmit={this.setCancelled}
+              onCancel={this.hideCancel}
+              submitLabel={messages.cancelOrder}
+              cancelLabel={messages.cancel}
+            />
 
-          <DeleteConfirmation
-            open={this.state.openDelete}
-            isSingle={true}
-            itemsCount={1}
-            itemName={orderName}
-            onCancel={this.closeDelete}
-            onDelete={this.deleteOrder}
-          />
+            <DeleteConfirmation
+              open={this.state.openDelete}
+              isSingle={true}
+              itemsCount={1}
+              itemName={orderName}
+              onCancel={this.closeDelete}
+              onDelete={this.deleteOrder}
+            />
 
-          <IconMenu
-           iconButtonElement={
-             <IconButton touch={true}>
-               <FontIcon color="#fff" className="material-icons">more_vert</FontIcon>
-             </IconButton>
-           }
-           targetOrigin={{horizontal: 'right', vertical: 'top'}}
-           anchorOrigin={{horizontal: 'right', vertical: 'top'}}
-          >
+            <IconMenu
+             iconButtonElement={
+               <IconButton touch={true}>
+                 <FontIcon color="#fff" className="material-icons">more_vert</FontIcon>
+               </IconButton>
+             }
+             targetOrigin={{horizontal: 'right', vertical: 'top'}}
+             anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+            >
             {menuItems}
             <MenuItem primaryText={messages.deleteOrder} onClick={this.openDelete} />
           </IconMenu>

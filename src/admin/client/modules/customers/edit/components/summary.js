@@ -47,8 +47,7 @@ export default class CustomerSummary extends React.Component {
       <Paper className="paper-box" zDepth={1}>
         <div className={style.innerBox}>
           <div className={style.customerName} style={{ paddingBottom:26, paddingTop:0 }}>
-            {customer.full_name}
-            <div><small>{customer.group_name}</small></div>
+            {customer.firstName} {customer.lastName}
           </div>
 
           <div className={style.summaryRow + " row"}>

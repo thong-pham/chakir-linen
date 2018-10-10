@@ -2,6 +2,9 @@ import React from 'react'
 import {Field, reduxForm} from 'redux-form'
 import text from '../../text'
 import { formatCurrency } from '../../lib/helper'
+import axios from 'axios'
+
+const URL = "http://localhost:3001/api/v1/";
 
 const validate = values => {
     const errors = {}
@@ -30,7 +33,10 @@ class CreateAccountForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      done: false
+      done: false,
+      businessInfo: false,
+      groups: null,
+      license: false
     };
   }
 
@@ -38,15 +44,19 @@ class CreateAccountForm extends React.Component {
       if (localStorage.getItem('token')){
           this.props.history.push('/');
       }
+      else {
+        return axios.get(URL + "user_groups")
+          .then(response => {
+              return response.data;
+          })
+          .then(json => {
+              this.setState({groups: json});
+          })
+          .catch(error => {
+              console.log(error.response);
+          });
+      }
   }
-
-  // componentWillReceiveProps(nextProps) {
-  //   if(this.props.show !== nextProps.show){
-  //     this.setState({
-  //       done: !nextProps.show
-  //     });
-  //   }
-  // }
 
   handleSave = () => {
     this.props.saveForm();
@@ -61,7 +71,7 @@ class CreateAccountForm extends React.Component {
   };
 
   getField = (fieldName) => {
-    const fields = this.props.registerFields || [];
+    const fields = this.props.formFields || [];
     const field = fields.find(item => item.name === fieldName);
     return field;
   }
@@ -94,7 +104,8 @@ class CreateAccountForm extends React.Component {
 
   getFieldPlaceholder = (fieldName) => {
     const field = this.getField(fieldName);
-    return field && field.placeholder && field.placeholder.length > 0 ? field.placeholder : '';
+    const placeholder = this.getFieldLabelText(fieldName);
+    return field && field.placeholder && field.placeholder.length > 0 ? field.placeholder : placeholder;
   }
 
   getFieldLabelText = (fieldName) => {
@@ -121,6 +132,15 @@ class CreateAccountForm extends React.Component {
         case 'password':
           return text.password;
           break;
+        case 'customerType':
+          return text.customerType;
+          break
+        case 'regularCustomer':
+          return text.regularCustomer;
+          break
+        case 'reseller':
+          return text.reseller;
+          break
         case 'businessName':
           return text.businessName;
           break
@@ -141,6 +161,16 @@ class CreateAccountForm extends React.Component {
     return this.isFieldOptional(fieldName) ? `${labelText} (${text.optional})` : labelText;
   }
 
+  chooseType = (e) => {
+      if (e.target.value === 'Reseller') this.setState({businessInfo: true});
+      else this.setState({businessInfo: false});
+  }
+
+  inState = (e) => {
+      if (e.target.value === 'true') this.setState({license: true});
+      else this.setState({license: false});
+  }
+
   render() {
     const {
       handleSubmit,
@@ -150,98 +180,161 @@ class CreateAccountForm extends React.Component {
       reset,
       submitting,
       settings,
-      themeSettings
+      themeSettings,
+      creatingUserError
     } = this.props;
 
+    const { businessInfo, groups, license } = this.state;
+
     const {
-      registerInputClass = 'register-field',
-      registerButtonClass = 'register-button button is-primary'
+      formInputClass = 'form-field',
+      formButtonClass = 'form-button button is-primary',
+      formSelectClass = 'form-select'
     } = themeSettings;
 
-    const inputClassName = registerInputClass;
-    const buttonClassName = registerButtonClass;
-    //const { shippingMethods } = this.state;
+    const inputClassName = formInputClass;
+    const buttonClassName = formButtonClass;
+    const selectClassName = formSelectClass;
+
+    let groupView = null;
+    if (groups && groups.length > 0){
+        groupView = groups.map(group =>
+          <div key={group.id} className="column is-6">
+            <label><Field className="form-field-radio" name="customerType" id="customer.customerType" component={inputField} type="radio"
+              validate={this.getFieldValidators('customerType')}
+              value={group.name} onChange={this.chooseType}/>{' '} {group.name}</label>
+          </div>
+        )
+    }
+
+    let error = null;
+    if (creatingUserError){
+        error = (
+            <div className="error-box">{creatingUserError}</div>
+        )
+    }
     return (
-        <div className="register-step">
+        <div className="form-step">
 
           <form onSubmit={handleSubmit}>
             <h1><span>1</span> {text.customerDetails}</h1>
             {!this.isFieldHidden('firstName') &&
               <Field className={inputClassName} name="firstName" id="customer.firstName" component={inputField} type="text"
-                label={this.getFieldLabel('firstName')}
+                //label={this.getFieldLabel('firstName')}
                 validate={this.getFieldValidators('firstName')}
                 placeholder={this.getFieldPlaceholder('firstName')}/>
             }
 
             {!this.isFieldHidden('lastName') &&
               <Field className={inputClassName} name="lastName" id="customer.lastName" component={inputField} type="text"
-                label={this.getFieldLabel('lastName')}
+                //label={this.getFieldLabel('lastName')}
                 validate={this.getFieldValidators('lastName')}
                 placeholder={this.getFieldPlaceholder('lastName')}/>
             }
 
             {!this.isFieldHidden('mobile') &&
               <Field className={inputClassName} name="mobile" id="customer.mobile" component={inputField} type="tel"
-                label={this.getFieldLabel('mobile')}
+                //label={this.getFieldLabel('mobile')}
                 validate={this.getFieldValidators('mobile')}
                 placeholder={this.getFieldPlaceholder('mobile')}/>
             }
 
             {!this.isFieldHidden('email') &&
               <Field className={inputClassName} name="email" id="customer.email" component={inputField} type="email"
-                label={this.getFieldLabel('email')}
+                //label={this.getFieldLabel('email')}
                 validate={this.getFieldValidators('email')}
                 placeholder={this.getFieldPlaceholder('email')}/>
             }
 
             {!this.isFieldHidden('confirmEmail') &&
               <Field className={inputClassName} name="confirmEmail" id="customer.confirmEmail" component={inputField} type="email"
-                label={this.getFieldLabel('confirmEmail')}
+                //label={this.getFieldLabel('confirmEmail')}
                 validate={this.getFieldValidators('confirmEmail')}
                 placeholder={this.getFieldPlaceholder('confirmEmail')}/>
             }
 
-            <h1><span>2</span> {text.businessInfo}</h1>
-
-            {!this.isFieldHidden('businessName') &&
-              <Field className={inputClassName} name="businessName" id="customer.businessName" component={inputField} type="text"
-                label={this.getFieldLabel('businessName')}
-                //validate={this.getFieldValidators('businessName')}
-                placeholder={this.getFieldPlaceholder('businessName')}/>
+            {!this.isFieldHidden('customerType') &&
+              <div className="columns">{/*<label>{this.getFieldLabel('customerType')}</label>*/}
+                {groupView}
+              </div>
             }
 
-            {!this.isFieldHidden('businessPhone') &&
-              <Field className={inputClassName} name="businessPhone" id="customer.businessPhone" component={inputField} type="tel"
-                label={this.getFieldLabel('businessPhone')}
-                //validate={this.getFieldValidators('businessPhone')}
-                placeholder={this.getFieldPlaceholder('businessPhone')}/>
+            <hr />
+
+            {(businessInfo) &&
+                <div><h1><span>2</span> {text.businessInfo}</h1>
+
+                {!this.isFieldHidden('businessName') &&
+                  <Field className={inputClassName} name="businessName" id="customer.businessName" component={inputField} type="text"
+                    validate={this.getFieldValidators('businessName')}
+                    placeholder={this.getFieldPlaceholder('businessName')}/>
+                }
+
+                {!this.isFieldHidden('businessPhone') &&
+                  <Field className={inputClassName} name="businessPhone" id="customer.businessPhone" component={inputField} type="tel"
+                    validate={this.getFieldValidators('businessPhone')}
+                    placeholder={this.getFieldPlaceholder('businessPhone')}/>
+                }
+
+                {!this.isFieldHidden('businessCategory') && <div className={selectClassName}>
+                    <span className="select is-fullwidth">
+                      <Field name="businessCategory" id="customer.businessCategory" component='select'>
+                        <option value="">Please select business category</option>
+                        <option value="Contractors and Services Provider">Contractors and Services Provider</option>
+                        <option value="Education">Education</option>
+                        <option value="Health Services">Health Services</option>
+                        <option value="Hospitality and Entertainment">Hospitality and Entertainment</option>
+                        <option value="Property Management and Maintenance">Property Management and Maintenance</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Other Customer Type">Other Customer Type</option>
+                      </Field>
+                    </span>
+                  </div>
+                }
+
+                {!this.isFieldHidden('inState') &&
+                  <div className="columns">
+                    <div className="column is-6">
+                      <label>Are you in California</label>
+                    </div>
+                    <div className="column is-3">
+                      <label><Field className="form-field-radio" name="inState" id="customer.inState" component={inputField} type="radio" value="true" onChange={this.inState}/> Yes</label>
+                    </div>
+                    <div className="column is-3">
+                      <label><Field className="form-field-radio" name="inState" id="customer.inState" component={inputField} type="radio" value="false" onChange={this.inState}/> No</label>
+                    </div>
+                  </div>
+                }
+
+                {!this.isFieldHidden('inState') && (license) &&
+                  <div className="columns">
+                    <div className="column is-6">
+                      <label>Do you have a reseller license</label>
+                    </div>
+                    <div className="column is-3">
+                      <label><Field className="form-field-radio" name="license" id="customer.license" component={inputField} type="radio" value="true"/> Yes</label>
+                    </div>
+                    <div className="column is-3">
+                      <label><Field className="form-field-radio" name="license" id="customer.license" component={inputField} type="radio" value="false"/> No</label>
+                    </div>
+                  </div>
+                }
+
+                <hr /></div>
             }
 
-            {!this.isFieldHidden('businessCategory') && <div><label>{this.getFieldLabel('businessCategory')}</label>
-              <Field className={inputClassName} name="businessCategory" id="customer.businessCategory" component='select'>
-                <option value="">Choose one...</option>
-                <option value="Contractors and Services Provider">Contractors and Services Provider</option>
-                <option value="Education">Education</option>
-                <option value="Health Services">Health Services</option>
-                <option value="Hospitality and Entertainment">Hospitality and Entertainment</option>
-                <option value="Property Management and Maintenance">Property Management and Maintenance</option>
-                <option value="Retail">Retail</option>
-                <option value="Other Customer Type">Other Customer Type</option>
-              </Field></div>
-            }
-
-            <h1><span>3</span> {text.createPassword}</h1>
+            <h1>{(businessInfo) ? <span>3</span> : <span>2</span>} {text.createPassword}</h1>
 
             {!this.isFieldHidden('password') &&
               <Field className={inputClassName} name="password" id="customer.password" component={inputField} type="password"
-                label={this.getFieldLabel('password')}
+                //label={this.getFieldLabel('password')}
                 validate={this.getFieldValidators('password')}
                 placeholder={this.getFieldPlaceholder('password')}/>
             }
-
-            <div className="register-button-wrap">
+            {error}
+            <div className="form-button-wrap">
               <button
-                  type="button"
+                  type="submit"
                   onClick={handleSubmit}
                   disabled={invalid}
                   className={buttonClassName}>

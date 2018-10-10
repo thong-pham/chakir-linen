@@ -18,6 +18,7 @@ const mapStateToProps = (state, ownProps) => {
     processingCheckout: state.app.processingCheckout,
     paymentMethods: state.app.paymentMethods,
     loadingPaymentMethods: state.app.loadingPaymentMethods,
+    user: state.app.userInfo
   }
 }
 
@@ -25,7 +26,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     finishCheckout: () => {
       dispatch(checkout(null, ownProps.history));
-      //dispatch(analyticsSetPaymentMethod(values.payment_method_id));
+      dispatch(analyticsSetPaymentMethod(values.payment_method_id));
     },
     checkoutStripe: (value) => {
       dispatch(checkoutStripe(value, ownProps.history));

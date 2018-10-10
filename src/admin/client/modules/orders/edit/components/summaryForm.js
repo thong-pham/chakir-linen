@@ -48,7 +48,7 @@ class SummaryForm extends React.Component {
       this.setState({orderStatuses: json});
     })
 
-    api.shippingMethods.list(filter).then(({status, json}) => {
+    api.shippingMethods.list().then(({status, json}) => {
       this.setState({shippingMethods: json});
     })
 
@@ -94,14 +94,6 @@ class SummaryForm extends React.Component {
 
             <div>
               <Field component={TextField} fullWidth={true} name="note" floatingLabelText={messages.note}/>
-            </div>
-
-            <div>
-              <Field component={TextField} fullWidth={true} name="email" floatingLabelText={messages.email}/>
-            </div>
-
-            <div>
-              <Field component={TextField} fullWidth={true} name="mobile" floatingLabelText={messages.mobile}/>
             </div>
           </div>
           <div className={style.shippingButtons}>

@@ -1,3 +1,5 @@
+import settings from '../../../config/store'
+
 export let themeSettings = {};
 export let text = {};
 

@@ -28,7 +28,6 @@ export const checkTokenFromUrl = () => {
     const token = getParameterByName('token');
     if (token && token !== '') {
       const tokenData = parseJWT(token);
-
       if (tokenData) {
         const expiration_date = tokenData.exp * 1000;
         if (expiration_date > Date.now()) {
@@ -46,6 +45,21 @@ export const checkTokenFromUrl = () => {
       }
     }
   }
+}
+
+export const checkTokenFromLogIn = (token) => {
+    const tokenData = parseJWT(token);
+    if (tokenData) {
+      const expiration_date = tokenData.exp * 1000;
+      if (expiration_date > Date.now()) {
+        saveToken({token, email: tokenData.email, expiration_date});
+        location.replace(HOME_PATH);
+      } else {
+        alert(messages.tokenExpired);
+      }
+    } else {
+      alert(messages.tokenInvalid);
+    }
 }
 
 const parseJWT = (jwt) => {

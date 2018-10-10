@@ -2,20 +2,12 @@ import React from 'react'
 import {connect} from 'react-redux'
 import {withRouter} from 'react-router'
 import {reset, submit} from 'redux-form';
+import Form from './form'
+
 import {
   checkout,
-  updateCart,
-  fetchShippingMethods,
-  fetchPaymentMethods,
-  updateCartShippingCountry,
-  updateCartShippingState,
-  updateCartShippingCity,
-  updateCartShippingMethod,
-  updateCartPaymentMethod,
-  analyticsSetShippingMethod,
-  analyticsSetPaymentMethod
+  updateCart
 } from '../../actions'
-import Form from './form'
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -32,21 +24,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     },
     saveForm: (values) => {
       dispatch(submit('CheckoutStepContacts'));
-    },
-    saveShippingCountry: (countryName) => {
-      if(countryName && countryName.length > 0) {
-        dispatch(updateCartShippingCountry(countryName));
-      }
-    },
-    saveShippingState: (stateName) => {
-      if(stateName && stateName.length > 0) {
-        dispatch(updateCartShippingState(stateName));
-      }
-    },
-    saveShippingCity: (cityName) => {
-      if(cityName && cityName.length > 0) {
-        dispatch(updateCartShippingCity(cityName));
-      }
     },
     onLoad: () => {}
   }

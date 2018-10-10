@@ -43,7 +43,8 @@
   "close": "Close",
   "attributes": "Product details",
   "home": "Home",
-  "saleEnds": "Offer ends",
+  "saleEnds": "Deal ends",
+  "currentDeal": "Current Deals",
   "days": "days",
   "hours": "hrs",
   "minutes": "mins",
@@ -61,5 +62,6 @@
   "company": "Company",
   "comments": "Comments",
   "recentlyViewed": "Recently Viewed",
-  "account": "Your Account"
+  "account": "Your Account",
+  "customerReviews": "Customer Reviews"
 }

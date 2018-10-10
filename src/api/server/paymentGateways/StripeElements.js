@@ -51,9 +51,10 @@ const process = (params, secret_key) => {
     if (!params || Object.keys(params).length === 0) {
       return reject('Params is empty');
     }
+    const amount = Number((params.amount * 100).toFixed(0))
     const stripe = stripePackage(secret_key);
     const charge = stripe.charges.create({
-      amount: params.amount * 100,
+      amount: amount,
       currency: params.currency,
       description: params.statement,
       statement_descriptor: params.statement,

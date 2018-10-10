@@ -20,6 +20,8 @@ class ProductsRoute {
     this.router.put('/v1/products/:productId', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.updateProduct.bind(this));
     this.router.delete('/v1/products/:productId', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.deleteProduct.bind(this));
 
+    this.router.put('/v1/products/:productId/addReview', this.addReview.bind(this));
+
     this.router.get('/v1/products/:productId/images', security.checkUserScope.bind(this, security.scope.READ_PRODUCTS), this.getImages.bind(this));
     this.router.post('/v1/products/:productId/images', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.addImage.bind(this));
     this.router.put('/v1/products/:productId/images/:imageId', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.updateImage.bind(this));
@@ -45,22 +47,24 @@ class ProductsRoute {
     this.router.put('/v1/products/:productId/variants/:variantId', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.updateVariant.bind(this));
     this.router.delete('/v1/products/:productId/variants/:variantId', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.deleteVariant.bind(this));
     this.router.put('/v1/products/:productId/variants/:variantId/options', security.checkUserScope.bind(this, security.scope.WRITE_PRODUCTS), this.setVariantOption.bind(this));
+
+
   }
 
   getProducts(req, res, next) {
-    ProductsService.getProducts(req.query).then(data => {
-      res.send(data)
-    }).catch(next);
+      ProductsService.getProducts(req.query).then(data => {
+          res.status(200).header('Cache-Control', 'public, max-age=60').send(data)
+      }).catch(next);
   }
 
   getSingleProduct(req, res, next) {
-    ProductsService.getSingleProduct(req.params.productId).then(data => {
-      if (data) {
-        res.send(data)
-      } else {
-        res.status(404).end()
-      }
-    }).catch(next);
+      ProductsService.getSingleProduct(req.params.productId).then(data => {
+          if (data) {
+              res.status(200).header('Cache-Control', 'public, max-age=60').send(data)
+          } else {
+              res.status(404).end()
+          }
+      }).catch(next);
   }
 
   addProduct(req, res, next) {
@@ -76,6 +80,16 @@ class ProductsRoute {
       } else {
         res.status(404).end()
       }
+    }).catch(next);
+  }
+
+  addReview(req, res, next) {
+    ProductsService.addReview(req.params.productId, req.body).then(data => {
+        if (data) {
+          res.send(data)
+        } else {
+          res.status(404).end()
+        }
     }).catch(next);
   }
 

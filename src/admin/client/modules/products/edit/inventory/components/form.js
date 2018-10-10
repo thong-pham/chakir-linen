@@ -73,6 +73,7 @@ const asyncValidate = (values) => {
 }
 
 const ProductInventoryForm = ({ handleSubmit, pristine, reset, submitting, initialValues, settings }) => {
+
   return (
     <form onSubmit={handleSubmit}>
       <Paper className="paper-box" zDepth={1}>
@@ -102,6 +103,35 @@ const ProductInventoryForm = ({ handleSubmit, pristine, reset, submitting, initi
                     floatingLabelText={messages.products_dateSaleTo} />
                 </div>
               </div>
+              {/*<div className="blue-title">{messages.quantity_and_price}</div>
+              <div className="row">
+                <div className="col-xs-4">
+                  <Field name="quantity1" component={TextField} floatingLabelText={messages.quantity} fullWidth={true}/>
+                  <Field name="price1" component={TextField} floatingLabelText={messages.products_price + ` (${settings.currency_symbol})`} fullWidth={true}/>
+                </div>
+                <div className="col-xs-4">
+                  <Field name="quantity2" component={TextField} floatingLabelText={messages.quantity} fullWidth={true}/>
+                  <Field name="price2" component={TextField} floatingLabelText={messages.products_price + ` (${settings.currency_symbol})`} fullWidth={true}/>
+                </div>
+                <div className="col-xs-4">
+                  <Field name="quantity3" component={TextField} floatingLabelText={messages.quantity} fullWidth={true}/>
+                  <Field name="price3" component={TextField} floatingLabelText={messages.products_price + ` (${settings.currency_symbol})`} fullWidth={true}/>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-xs-4">
+                  <Field name="wholesale_quantity1" component={TextField} floatingLabelText={messages.wholesale_quantity} fullWidth={true}/>
+                  <Field name="wholesale_price1" component={TextField} floatingLabelText={messages.wholesale_price + ` (${settings.currency_symbol})`} fullWidth={true}/>
+                </div>
+                <div className="col-xs-4">
+                  <Field name="wholesale_quantity2" component={TextField} floatingLabelText={messages.wholesale_quantity} fullWidth={true}/>
+                  <Field name="wholesale_price2" component={TextField} floatingLabelText={messages.wholesale_price + ` (${settings.currency_symbol})`} fullWidth={true}/>
+                </div>
+                <div className="col-xs-4">
+                  <Field name="wholesale_quantity3" component={TextField} floatingLabelText={messages.wholesale_quantity} fullWidth={true}/>
+                  <Field name="wholesale_price3" component={TextField} floatingLabelText={messages.wholesale_price + ` (${settings.currency_symbol})`} fullWidth={true}/>
+                </div>
+              </div>*/}
             </div>
 
             <div className="col-xs-5 col-xs-offset-2">

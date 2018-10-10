@@ -24,7 +24,8 @@ export default class OrderDetails extends React.Component {
   }
 
   render() {
-    const {order, settings, onItemDelete, onItemUpdate, onShippingAddressUpdate, onOrderSummaryUpdate, onCheckout, processingCheckout} = this.props;
+    const {order, settings, onItemDelete, onItemUpdate, onShippingAddressUpdate, onBillingAddressUpdate,
+            onOrderSummaryUpdate, onCheckout, processingCheckout, updateCustomerInfo} = this.props;
     if (!order)
       return null;
 
@@ -32,7 +33,13 @@ export default class OrderDetails extends React.Component {
       <div className="row row--no-gutter col-full-height">
         <div className="col-xs-12 col-sm-5 col-md-4 col--no-gutter scroll col-full-height">
           <OrderSummary order={order} settings={settings} onOrderSummaryUpdate={onOrderSummaryUpdate} onCheckout={onCheckout} processingCheckout={processingCheckout}/>
-          <OrderCustomer order={order} settings={settings} onShippingAddressUpdate={onShippingAddressUpdate}/>
+          <OrderCustomer
+              order={order}
+              settings={settings}
+              onShippingAddressUpdate={onShippingAddressUpdate}
+              onBillingAddressUpdate={onBillingAddressUpdate}
+              updateCustomerInfo={updateCustomerInfo}
+          />
         </div>
         <div className="col-xs-12 col-sm-7 col-md-8 col--no-gutter scroll col-full-height">
           <Paper className="paper-box" zDepth={1}>

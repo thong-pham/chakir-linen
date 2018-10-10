@@ -20,6 +20,7 @@ class OrdersRoute {
     this.router.get('/v1/orders', security.checkUserScope.bind(this, security.scope.READ_ORDERS), this.getOrders.bind(this));
     this.router.post('/v1/orders', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.addOrder.bind(this));
     this.router.get('/v1/orders/:id', security.checkUserScope.bind(this, security.scope.READ_ORDERS), this.getSingleOrder.bind(this));
+    this.router.get('/v1/orders/cartById/:id', this.getSingleOrder.bind(this));
     this.router.put('/v1/orders/:id', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.updateOrder.bind(this));
     this.router.delete('/v1/orders/:id', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.deleteOrder.bind(this));
 
@@ -70,29 +71,27 @@ class OrdersRoute {
 
   updateOrder(req, res, next) {
     OrdersService.updateOrder(req.params.id, req.body).then(data => {
-      if (data) {
-        res.send(data)
-      } else {
-        res.status(404).end()
-      }
+        if (data) {
+          res.send(data)
+        } else {
+          res.status(404).end()
+        }
     }).catch(next);
   }
 
   deleteOrder(req, res, next) {
     OrdersService.deleteOrder(req.params.id).then(data => {
-      res.status(data
-        ? 200
-        : 404).end()
+      res.status(data ? 200 : 404).end()
     }).catch(next);
   }
 
   recalculateOrder(req, res, next) {
     OrderItemsService.calculateAndUpdateAllItems(req.params.id).then(data => {
-      if (data) {
-        res.send(data)
-      } else {
-        res.status(404).end()
-      }
+        if (data) {
+          res.send(data)
+        } else {
+          res.status(404).end()
+        }
     }).catch(next);
   }
 

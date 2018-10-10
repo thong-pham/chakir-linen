@@ -3,6 +3,7 @@ import {Field, reduxForm} from 'redux-form'
 import text from '../../text'
 import { formatCurrency } from '../../lib/helper'
 import AddAddressForm from '../addAddressForm'
+import CountryList from '../countryList'
 
 const validateRequired = value => value && value.length > 0 ? undefined : text.required;
 
@@ -69,14 +70,11 @@ class CheckoutStepShipping extends React.Component {
     };
   }
 
-  componentDidUpdate(prevProps) {
-      if (prevProps.user !== this.props.user)
-      {
-          const { user } = this.props;
-          if (user && user.shipping_addresses.length > 0) {
-               const address = user.shipping_addresses.filter(element => element.default_shipping === true)[0];
-               this.setState({chosenAddress: address});
-          }
+  componentDidMount() {
+      const { user } = this.props;
+      if (user && user.shipping_addresses.length > 0) {
+           const address = user.shipping_addresses.filter(element => element.default_shipping === true)[0];
+           this.setState({chosenAddress: address});
       }
   }
 
@@ -131,7 +129,8 @@ class CheckoutStepShipping extends React.Component {
           state: array[3],
           postal_code: array[4],
           country: array[5],
-          phone: array[6]
+          phone: array[6],
+          residential: array[7]
       }
       this.setState({finalShippingAddress: shipping_address, defaultAddress: shipping_address, openOption: false});
   }
@@ -140,10 +139,29 @@ class CheckoutStepShipping extends React.Component {
       this.chooseAddress(values.billing_address);
   }
 
+  onSubmitWithoutLogin = (values) => {
+      if (values.shipping_address.country === ''){
+          values.shipping_address.country = 'United States';
+      }
+      if (values.billing_address.address1 === ''){
+          values.billing_address = values.shipping_address;
+      }
+      const data = {shipping_address: values.shipping_address, billing_address: values.billing_address, comments: values.comments};
+      //console.log(data);
+      this.props.submitAddressWithoutLogin(data).then(data => {
+          this.setState({done: true});
+          this.props.onSave();
+      },this);
+  }
+
+  updateChosenAddress = (defaultAddress) => {
+      this.setState({chosenAddress: defaultAddress});
+  }
+
   chooseAddress = (billing_address) => {
       let { chosenAddress, billingAsShipping, finalShippingAddress } = this.state;
-      const { initialValues } = this.props;
-
+      const { initialValues, user } = this.props;
+      //console.log(initialValues);
       let finalBillingAddress = null;
 
       if (finalShippingAddress === null){
@@ -158,14 +176,16 @@ class CheckoutStepShipping extends React.Component {
           }
       }
 
-      if (billingAsShipping || billing_address.full_name === '') {
+      if (billingAsShipping || billing_address.address1 === '') {
           finalBillingAddress = finalShippingAddress;
       }
       else {
           finalBillingAddress = billing_address;
       }
+      finalShippingAddress.id = user.currentOrderId;
+      finalShippingAddress.id = user.currentOrderId;
       const data = {shipping_address: finalShippingAddress, billing_address: finalBillingAddress};
-
+      //console.log(data);
       this.props.submitAddress(data).then(data => {
           this.setState({done: true});
           this.props.onSave();
@@ -180,12 +200,7 @@ class CheckoutStepShipping extends React.Component {
       valid,
       reset,
       submitting,
-      processingCheckout,
       initialValues,
-      shippingMethods,
-      loadingShippingMethods,
-      saveShippingMethod,
-      shippingMethod,
       checkoutFields,
       settings,
       inputClassName,
@@ -193,15 +208,18 @@ class CheckoutStepShipping extends React.Component {
       editButtonClassName,
       user
     } = this.props;
+
+    const selectClassName = "form-select";
+
     const { openModal, openOption } = this.state;
     let { defaultAddress } = this.state;
-    //console.log(this.props);
+
     const hideBillingAddress = settings.hide_billing_address === true;
     //const { payment_method_gateway, grand_total } = initialValues;
     //const showPaymentForm = payment_method_gateway && payment_method_gateway !== '';
     const showPaymentForm = true;
     const commentsField = checkoutFields.find(f => f.name === 'comments');
-    const commentsFieldPlaceholder = commentsField && commentsField.placeholder && commentsField.placeholder.length > 0 ? commentsField.placeholder : '';
+    const commentsFieldPlaceholder = commentsField && commentsField.placeholder && commentsField.placeholder.length > 0 ? commentsField.placeholder : 'Any instructions to find this address';
     const commentsFieldLabel = commentsField && commentsField.label && commentsField.label.length > 0 ? commentsField.label : text.comments;
     const commentsFieldStatus = commentsField && commentsField.status.length > 0 ? commentsField.status : null;
     const commentsValidate = commentsFieldStatus === 'required' ? validateRequired : null;
@@ -209,13 +227,13 @@ class CheckoutStepShipping extends React.Component {
 
     const fields = [
         {key: "full_name", label: "Full Name", required: true},
-        {key: "address1", label: "Address", required: true},
-        {key: "address2", label: "", required: false},
-        {key: "phone", label: "Phone", required: true},
+        {key: "address1", label: "Street Address", required: true},
         {key: "city", label: "City", required: true},
-        {key: "state", label: "State", required: true},
+        {key: "state", label: "State/Province", required: true},
         {key: "postal_code", label: "Zip Code", required: true},
-        {key: "country", label: "Country", required: true}
+        {key: "residential", label: "Is Residential", required: true},
+        {key: "country", label: "Country", required: true},
+        {key: "phone", label: "Phone", required: true}
     ]
 
   //   const shipping_addresses = [
@@ -244,7 +262,7 @@ class CheckoutStepShipping extends React.Component {
     if(!this.props.show){
       return (
         <div className="checkout-step">
-          <h1><span>2</span>{this.props.title}</h1>
+          <h1>{(user) ? <span>1</span> : <span>2</span>} {this.props.title}</h1>
         </div>
       )
     } else if(this.state.done){
@@ -252,8 +270,8 @@ class CheckoutStepShipping extends React.Component {
       let shippingFields = null;
         shippingFields = fields.map((field, index) => {
           const fieldLabel = getFieldLabel(field);
-          const fieldValue = initialValues.shipping_address[field.key];
-
+          let fieldValue = initialValues.shipping_address[field.key];
+          if (typeof fieldValue === 'boolean') fieldValue = fieldValue.toString();
           return <div key={index} className="checkout-field-preview">
             <div className="name">{fieldLabel}</div>
             <div className="value">{fieldValue}</div>
@@ -262,7 +280,7 @@ class CheckoutStepShipping extends React.Component {
 
       return (
         <div className="checkout-step">
-          <h1><span>2</span>{this.props.title}</h1>
+          <h1>{(user) ? <span>1</span> : <span>2</span>} {this.props.title}</h1>
           {shippingFields}
 
           {!hideCommentsField && initialValues.comments !== '' &&
@@ -290,48 +308,64 @@ class CheckoutStepShipping extends React.Component {
           const fieldId = `shipping_address.${field.key}`;
           const fieldClassName = `${inputClassName} shipping-${field.key}`;
           const validate = field.required === true ? validateRequired : null;
+          const countryView = (
+              <div className={selectClassName}>
+                <span className="select is-fullwidth">
+                    <CountryList country={fieldId}/>
+                </span>
+              </div>
+          )
 
-          return (<div key={index} className="columns">
-            <div className="column is-3">
-            <label>{fieldLabel}</label>
-            </div>
-            <div className="column is-9">
-            <Field
-              className={fieldClassName}
-              name={fieldId}
-              id={fieldId}
-              component={inputField}
-              type="text"
-              validate={validate}
-            />
-            </div>
-          </div>)
+          return (
+                <div key={index}>
+                  {field.key === 'residential' &&
+                    <div className="columns" style={{marginBottom: '5px'}}>
+                      <div className="column is-4">
+                        <label>Is Residential</label>
+                      </div>
+                      <div className="column is-4">
+                        <label><Field className="form-field-radio" name={fieldId} id={fieldId} component={inputField} type="radio" value="true" /> Yes</label>
+                      </div>
+                      <div className="column is-4">
+                        <label><Field className="form-field-radio" name={fieldId} id={fieldId} component={inputField} type="radio" value="false" /> No</label>
+                      </div>
+                    </div>
+                  }
+                  {field.key === 'country' && <div>{countryView}</div>}
+                  {field.key !== 'country' && field.key !== 'residential' &&
+                    <Field
+                      className={fieldClassName}
+                      name={fieldId}
+                      id={fieldId}
+                      component={inputField}
+                      type="text"
+                      validate={validate}
+                      placeholder={fieldLabel}
+                    />
+                  }
+              </div>
+            )
         })
 
       return (
         <div className="checkout-step">
           <h1><span>2</span>{this.props.title}</h1>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(this.onSubmitWithoutLogin)}>
 
             {shippingFields}
 
-            {!hideCommentsField && <div className="columns">
-              <div className="column is-3">
-              <label>{commentsFieldLabel}</label>
-              </div>
-              <div className="column is-9">
-              <Field
-                className={inputClassName + ' shipping-comments'}
-                name="comments"
-                id="customer.comments"
-                component={textareaField}
-                type="text"
-                placeholder={commentsFieldPlaceholder}
-                validate={commentsValidate}
-                rows="3"
-              />
-              </div>
+            {!hideCommentsField && <div>
+                <Field
+                  className={inputClassName + ' shipping-comments'}
+                  name="shipping_address.comments"
+                  id="shipping_address.comments"
+                  component={textareaField}
+                  type="text"
+                  placeholder={commentsFieldPlaceholder}
+                  validate={commentsValidate}
+                  rows="3"
+                />
               </div>
             }
 
@@ -345,15 +379,25 @@ class CheckoutStepShipping extends React.Component {
 
                 {!this.state.billingAsShipping &&
                   <div>
-                    <Field className={inputClassName + ' billing-fullname'} name="billing_address.full_name" id="billing_address.full_name" component={inputField} type="text" label={text.fullName} validate={[validateRequired]}/>
-                    <Field className={inputClassName + ' billing-address1'} name="billing_address.address1" id="billing_address.address1" component={inputField} type="text" label={text.address1} validate={[validateRequired]}/>
-                    <Field className={inputClassName + ' billing-address2'} name="billing_address.address2" id="billing_address.address2" component={inputField} type="text" label={text.address2 + ` (${text.optional})`}/>
-                    <Field className={inputClassName + ' billing-city'} name="billing_address.city" id="billing_address.city" component={inputField} type="text" label={text.city} validate={[validateRequired]}/>
-                    <Field className={inputClassName + ' billing-state'} name="billing_address.state" id="billing_address.state" component={inputField} type="text" label={text.state} validate={[validateRequired]}/>
-                    <Field className={inputClassName + ' billing-country'} name="billing_address.country" id="billing_address.country" component={inputField} type="text" label={text.country} validate={[validateRequired]}/>
-                    <Field className={inputClassName + ' billing-postalcode'} name="billing_address.postal_code" id="billing_address.postal_code" component={inputField} type="text" label={text.postal_code} validate={[validateRequired]}/>
-                    <Field className={inputClassName + ' billing-phone'} name="billing_address.phone" id="billing_address.phone" component={inputField} type="text" label={text.phone + ` (${text.optional})`}/>
-                    <Field className={inputClassName + ' billing-company'} name="billing_address.company" id="billing_address.company" component={inputField} type="text" label={text.company + ` (${text.optional})`}/>
+                    <Field className={inputClassName + ' billing-fullname'} name="billing_address.full_name" id="billing_address.full_name" component={inputField} type="text" placeholder={text.fullName} validate={[validateRequired]}/>
+                    <Field className={inputClassName + ' billing-address1'} name="billing_address.address1" id="billing_address.address1" component={inputField} type="text" placeholder={text.address1} validate={[validateRequired]}/>
+                    <Field className={inputClassName + ' billing-city'} name="billing_address.city" id="billing_address.city" component={inputField} type="text" placeholder={text.city} validate={[validateRequired]}/>
+                    <Field className={inputClassName + ' billing-state'} name="billing_address.state" id="billing_address.state" component={inputField} type="text" placeholder={text.state} validate={[validateRequired]}/>
+                    <Field className={inputClassName + ' billing-postalcode'} name="billing_address.postal_code" id="billing_address.postal_code" component={inputField} type="text" placeholder={text.postal_code} validate={[validateRequired]}/>
+                    <div className="columns" style={{marginBottom: '5px'}}>
+                      <div className="column is-4">
+                        <label>Is Residential</label>
+                      </div>
+                      <div className="column is-4">
+                        <label><Field className="form-field-radio" name="billing_address.residential" id="billing_address.residential" component={inputField} type="radio" value="true" /> Yes</label>
+                      </div>
+                      <div className="column is-4">
+                        <label><Field className="form-field-radio" name="billing_address.residential" id="billing_address.residential" component={inputField} type="radio" value="false" /> No</label>
+                      </div>
+                    </div>
+                    <Field className={inputClassName + ' billing-country'} name="billing_address.country" id="billing_address.country" component={inputField} type="text" placeholder={text.country} validate={[validateRequired]}/>
+                    <Field className={inputClassName + ' billing-phone'} name="billing_address.phone" id="billing_address.phone" component={inputField} type="text" placeholder={text.phone + ` (${text.optional})`}/>
+                    <Field className={inputClassName + ' billing-company'} name="billing_address.company" id="billing_address.company" component={inputField} type="text" placeholder={text.company + ` (${text.optional})`}/>
                   </div>
                 }
               </div>
@@ -362,10 +406,7 @@ class CheckoutStepShipping extends React.Component {
             <div className="checkout-button-wrap">
               {showPaymentForm &&
                 <button
-                  type="button"
-                  onClick={handleSubmit(data => {
-                    this.handleSave();
-                  })}
+                  type="submit"
                   disabled={invalid}
                   className={buttonClassName}>
                   {text.next}
@@ -391,28 +432,20 @@ class CheckoutStepShipping extends React.Component {
         let shippingAddress = null;
         if (user.shipping_addresses.length > 0 ){
             shippingAddress = user.shipping_addresses.map(address => {
-                  const full_address = address.full_name + ", " + address.address1 + ", " + address.city + ", " + address.state + ", " + address.postal_code + ", "+ address.country;
-                  const full_address_withPhone = address.full_name + ", " + address.address1 + ", " + address.city + ", " + address.state + ", " + address.postal_code + ", "+ address.country + ", " + address.phone;
+                  const full_address = address.full_name + ", " + address.address1 + ", " + address.city + ", " + address.state + ", " + address.postal_code + ", " + address.country;
+                  const full_address_withPhone = address.full_name + ", " + address.address1 + ", " + address.city + ", " + address.state + ", " + address.postal_code + ", "+ address.country + ", " + address.phone + ", " + address.residential;
                   return (
-                      // <label key={index}>
-                      //   <Field
-                      //     name="shipping_address"
-                      //     component="input"
-                      //     type="radio"
-                      //     value={full_address_withPhone}
-                      //   />{' '}
-                      //   {full_address} <br></br><br></br>
-                      // </label>
                           <div className="columns" key={address.id}>
                               <label>
-                              <input type="radio" value={full_address_withPhone}
-                                            checked={full_address_withPhone === this.state.chosenAddress}
-                                            onChange={this.setAddress} />{' '}
-                               {full_address}
+                                  <input type="radio"
+                                         value={full_address_withPhone}
+                                         checked={full_address_withPhone === this.state.chosenAddress}
+                                         onChange={this.setAddress} />{' '}
+                                   {full_address}
                               </label>
                           </div>
-                  )
-            })
+                        )
+                })
         }
 
         let defaultShipping = null;
@@ -443,75 +476,73 @@ class CheckoutStepShipping extends React.Component {
             }
         }
 
-
         return (
            <div className="checkout-step">
-                <h1><span>2</span>{this.props.title}</h1>
-                {(user.shipping_addresses.length === 0) && <div>
-                                                            <p>You do not have any shipping addresses.</p>
-                                                            <button type="button" className="button is-info" onClick={this.openForm}>Add a new address</button>
-                                                          </div>}
+                <h1><span>1</span>{this.props.title}</h1>
+                {(user.shipping_addresses.length === 0) &&
+                  <div>
+                    <p>You do not have any shipping addresses.</p>
+                    <button type="button" className="button is-info" onClick={this.openForm}>Add a new address</button>
+                  </div>}
 
                 {(!openOption) && <div>{defaultShipping}</div>}
 
-                {(openOption) && <div className="columns">
-                    <div className="column is-8">
-                        <h2 style={{color: '#c45500'}}>Choose a shipping address</h2>
-                    </div>
-                    <div className="column is-4" style={{textAlign: 'right'}}>
-                        <a onClick={this.closeOption}>Close</a>
-                    </div>
-                </div>}
+                {(openOption) &&
+                  <div className="columns">
+                      <div className="column is-8">
+                          <h2 style={{color: '#c45500'}}>Choose a shipping address</h2>
+                      </div>
+                      <div className="column is-4" style={{textAlign: 'right'}}>
+                          <a onClick={this.closeOption}>Close</a>
+                      </div>
+                  </div>}
 
                 {(openModal) ? <div>{shippingFields}</div> : null}
 
                 {(openOption) &&
-                  <div>
-                    <div className="address-box">
-                          {shippingAddress}
-                          <div className="columns">
-                            <img className="icon" src="/assets/images/addIcon.png" alt="add" style={{width: '20px', height: '20px'}} /><a onClick={this.openForm}> &nbsp; Add a new address</a>
-                          </div>
-                      </div>
-                      <div className="address-box">
-                          <button type="button" className="button is-info" onClick={this.useAddress}>Use this address</button>
-                      </div>
+                    <div>
+                       <div className="address-box">
+                            {shippingAddress}
+                            <div className="columns">
+                                <img className="icon" src="/assets/images/addIcon.png" alt="add" style={{width: '20px', height: '20px'}} /><a onClick={this.openForm}> &nbsp; Add a new address</a>
+                            </div>
+                        </div>
+                        <div className="address-box">
+                            <button type="button" className="button is-info" onClick={this.useAddress}>Use this address</button>
+                        </div>
                     </div>
                   }
 
                 <form onSubmit={handleSubmit(this.onSubmit)} >
                 {!hideBillingAddress &&
-                  <div>
-                    <h2>{text.billingAddress}</h2>
-                    <div className="billing-as-shipping">
-                      <input id="billingAsShipping" type="checkbox" onChange={this.onChangeBillingAsShipping} checked={this.state.billingAsShipping} />
-                      <label htmlFor="billingAsShipping">{text.sameAsShipping}</label>
-                    </div>
+                    <div>
+                        <h2>{text.billingAddress}</h2>
+                        <div className="billing-as-shipping">
+                          <input id="billingAsShipping" type="checkbox" onChange={this.onChangeBillingAsShipping} checked={this.state.billingAsShipping} />
+                          <label htmlFor="billingAsShipping">{text.sameAsShipping}</label>
+                        </div>
 
-                    {!this.state.billingAsShipping &&
-                      <div>
-                          <Field className={inputClassName + ' billing-fullname'} name="billing_address.full_name" id="billing_address.full_name" component={inputField} type="text" label={text.fullName} validate={[validateRequired]}/>
-                          <Field className={inputClassName + ' billing-address1'} name="billing_address.address1" id="billing_address.address1" component={inputField} type="text" label={text.address1} validate={[validateRequired]}/>
-                          <Field className={inputClassName + ' billing-address2'} name="billing_address.address2" id="billing_address.address2" component={inputField} type="text" label={text.address2 + ` (${text.optional})`}/>
-                          <Field className={inputClassName + ' billing-city'} name="billing_address.city" id="billing_address.city" component={inputField} type="text" label={text.city} validate={[validateRequired]}/>
-                          <Field className={inputClassName + ' billing-state'} name="billing_address.state" id="billing_address.state" component={inputField} type="text" label={text.state} validate={[validateRequired]}/>
-                          <Field className={inputClassName + ' billing-country'} name="billing_address.country" id="billing_address.country" component={inputField} type="text" label={text.country} validate={[validateRequired]}/>
-                          <Field className={inputClassName + ' billing-postalcode'} name="billing_address.postal_code" id="billing_address.postal_code" component={inputField} type="text" label={text.postal_code} validate={[validateRequired]}/>
-                          <Field className={inputClassName + ' billing-phone'} name="billing_address.phone" id="billing_address.phone" component={inputField} type="text" label={text.phone + ` (${text.optional})`}/>
-                          <Field className={inputClassName + ' billing-company'} name="billing_address.company" id="billing_address.company" component={inputField} type="text" label={text.company + ` (${text.optional})`}/>
-                      </div>
-                    }
-                  </div>
-                }
-                <hr />
+                        {!this.state.billingAsShipping &&
+                          <div>
+                              <Field className={inputClassName + ' billing-fullname'} name="billing_address.full_name" id="billing_address.full_name" component={inputField} type="text" placeholder={text.fullName} validate={[validateRequired]}/>
+                              <Field className={inputClassName + ' billing-address1'} name="billing_address.address1" id="billing_address.address1" component={inputField} type="text" placeholder={text.address1} validate={[validateRequired]}/>
+                              <Field className={inputClassName + ' billing-city'} name="billing_address.city" id="billing_address.city" component={inputField} type="text" placeholder={text.city} validate={[validateRequired]}/>
+                              <Field className={inputClassName + ' billing-state'} name="billing_address.state" id="billing_address.state" component={inputField} type="text" placeholder={text.state} validate={[validateRequired]}/>
+                              <Field className={inputClassName + ' billing-country'} name="billing_address.country" id="billing_address.country" component={inputField} type="text" placeholder={text.country} validate={[validateRequired]}/>
+                              <Field className={inputClassName + ' billing-postalcode'} name="billing_address.postal_code" id="billing_address.postal_code" component={inputField} type="text" placeholder={text.postal_code} validate={[validateRequired]}/>
+                              <Field className={inputClassName + ' billing-phone'} name="billing_address.phone" id="billing_address.phone" component={inputField} type="text" placeholder={text.phone + ` (${text.optional})`}/>
+                              <Field className={inputClassName + ' billing-company'} name="billing_address.company" id="billing_address.company" component={inputField} type="text" placeholder={text.company + ` (${text.optional})`}/>
+                          </div>}
+                    </div>}
+                  <hr />
                   <div className="checkout-button-wrap">
                       <button type="submit" className={buttonClassName}>{text.next}</button>
                   </div>
-                </form>
+              </form>
            </div>
         )
-    }
-  }
+     }
+   }
 }
 
 export default reduxForm({form: 'CheckoutStepShipping', enableReinitialize: true, keepDirtyOnReinitialize: false})(CheckoutStepShipping)

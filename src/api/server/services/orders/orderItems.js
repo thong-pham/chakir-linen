@@ -8,6 +8,7 @@ const ObjectID = require('mongodb').ObjectID;
 const OrdersService = require('./orders');
 const ProductsService = require('../products/products');
 const ProductStockService = require('../products/stock');
+const UsersService = require('../users/users');
 
 class OrderItemsService {
   constructor() {}
@@ -27,6 +28,20 @@ class OrderItemsService {
     }
 
     return OrdersService.getSingleOrder(order_id);
+  }
+
+
+  async addItemToCurrentOrder(currentOrderId, order_id){
+      if (!ObjectID.isValid(currentOrderId) || !ObjectID.isValid(order_id)) {
+        return Promise.reject('Invalid identifier');
+      }
+      const order = await OrdersService.getSingleOrder(order_id);
+      var updatedOrder = null;
+      for (let item of order.items) {
+          updatedOrder = await this.addItem(currentOrderId, item);
+      }
+      await OrdersService.deleteOrder(order_id);
+      return updatedOrder;
   }
 
   async updateItemQuantityIfAvailable(order_id, orderItem, newItem) {
@@ -50,6 +65,10 @@ class OrderItemsService {
       }, {
         $push: {
           items: newItem
+        },
+        $set:{
+            shipping_method_id: null,
+            shipping_price: 0
         }
       });
 
@@ -116,7 +135,18 @@ class OrderItemsService {
           'items.id': itemObjectID
         }, {
           $set: item
-        });
+        }
+      );
+
+      await mongo.db.collection('orders').updateOne({
+          _id: orderObjectID
+        }, {
+          $set: {
+             shipping_method_id: null,
+             shipping_price: 0
+          }
+        }
+      );
 
       await this.calculateAndUpdateItem(order_id, item_id);
       await ProductStockService.handleAddOrderItem(order_id, item_id);
@@ -161,14 +191,23 @@ class OrderItemsService {
 
   getVariantNameFromProduct(product, variantId) {
     const variant = this.getVariantFromProduct(product, variantId);
+    let optImage = null;
     if(variant) {
       let optionNames = [];
       for(const option of variant.options){
         const optionName = this.getOptionNameFromProduct(product, option.option_id);
         const optionValueName = this.getOptionValueNameFromProduct(product, option.option_id, option.value_id);
         optionNames.push(`${optionName}: ${optionValueName}`);
+        if (optionName === 'Color'){
+            optImage = optionValueName;
+        }
       }
-      return optionNames.join(', ');
+      const variantName = optionNames.join(', ');
+      const data = {
+          variantName: variantName,
+          optImage: optImage
+      }
+      return data;
     }
 
     return null;
@@ -176,16 +215,20 @@ class OrderItemsService {
 
   async calculateAndUpdateItem(order_id, item_id) {
     // TODO: tax_total, discount_total
-
     let orderObjectID = new ObjectID(order_id);
     let itemObjectID = new ObjectID(item_id);
 
     const order = await OrdersService.getSingleOrder(order_id);
+    let user = null;
+    if (order.user_id){
+        user = await UsersService.getSingleUser(order.user_id);
+    }
+    const group_name = user ? user.group_name : '';
 
     if (order.items.length > 0) {
       let item = order.items.find(i => i.id.toString() === item_id.toString());
       if (item) {
-        const itemData = await this.getCalculatedData(item);
+        const itemData = await this.getCalculatedData(item, group_name);
         await mongo.db.collection('orders').updateOne({
           _id: orderObjectID,
           'items.id': itemObjectID
@@ -196,10 +239,12 @@ class OrderItemsService {
     }
   }
 
-  async getCalculatedData(item) {
+  async getCalculatedData(item, group_name) {
     const product = await ProductsService.getSingleProduct(item.product_id.toString());
+
     if(item.custom_price && item.custom_price > 0) {
       // product with custom price - can set on client side
+
       return {
         'items.$.sku': product.sku,
         'items.$.name': product.name,
@@ -210,16 +255,32 @@ class OrderItemsService {
         'items.$.weight': product.weight || 0,
         'items.$.discount_total': 0,
         'items.$.price_total': item.custom_price * item.quantity,
-        'items.$.image': product.images[0].url,
+        'items.$.image_url': product.images[0].url,
         'items.$.path': product.path
       }
     } else if(item.variant_id) {
       // product with variant
       const variant = this.getVariantFromProduct(product, item.variant_id);
-      const variantName = this.getVariantNameFromProduct(product, item.variant_id);
+      const {variantName, optImage} = this.getVariantNameFromProduct(product, item.variant_id);
       const variantPrice = variant.price && variant.price > 0 ? variant.price: product.price;
-
+      let index = 0;
+      for (var i = 0; i < product.images.length; i++){
+          if (product.images[i].alt.toLowerCase() === optImage.toLowerCase()){
+              index = i;
+          }
+      }
       if(variant) {
+        let price_total;
+        if (group_name === 'Reseller' && product.prices && product.prices.length > 0){
+            product.prices.forEach(price => {
+                if (item.quantity >= price.quantity){
+                    price_total = item.quantity * price.price;
+                }
+            })
+        }
+        if (price_total === undefined){
+            price_total = item.quantity * variantPrice;
+        }
         return {
           'items.$.sku': variant.sku,
           'items.$.name': product.name,
@@ -229,8 +290,8 @@ class OrderItemsService {
           'items.$.tax_total': 0,
           'items.$.weight': variant.weight || 0,
           'items.$.discount_total': 0,
-          'items.$.price_total': variantPrice * item.quantity,
-          'items.$.image': product.images[0].url,
+          'items.$.price_total': price_total,
+          'items.$.image_url': product.images[index].url,
           'items.$.path': product.path
         }
       } else {
@@ -239,6 +300,17 @@ class OrderItemsService {
       }
     } else {
       // normal product
+      let price_total;
+      if (group_name === 'Reseller' && product.prices && product.prices.length > 0){
+          product.prices.forEach(price => {
+              if (item.quantity >= price.quantity){
+                  price_total = item.quantity * price.price;
+              }
+          })
+      }
+      if (price_total === undefined){
+          price_total = item.quantity * product.price;
+      }
       return {
         'items.$.sku': product.sku,
         'items.$.name': product.name,
@@ -248,8 +320,8 @@ class OrderItemsService {
         'items.$.tax_total': 0,
         'items.$.weight': product.weight || 0,
         'items.$.discount_total': 0,
-        'items.$.price_total': product.price * item.quantity,
-        'items.$.image': product.images[0].url,
+        'items.$.price_total': price_total,
+        'items.$.image_url': product.images[0].url,
         'items.$.path': product.path
       }
     }
@@ -284,10 +356,18 @@ class OrderItemsService {
         items: {
           id: itemObjectID
         }
+      },
+      $set:{
+          shipping_method_id: null,
+          shipping_price: 0
       }
     });
 
-    return OrdersService.getSingleOrder(order_id);
+    const updatedOrder = await OrdersService.getSingleOrder(order_id);
+    if (updatedOrder.items.length === 0){
+        return OrdersService.deleteOrder(order_id);
+    }
+    else return OrdersService.getSingleOrder(order_id);
   }
 
   getValidDocumentForInsert(data) {
@@ -322,6 +402,10 @@ class OrderItemsService {
 
     if (data.quantity !== undefined) {
       item['items.$.quantity'] = parse.getNumberIfPositive(data.quantity);
+    }
+
+    if (data.custom_price !== undefined) {
+       item['items.$.custom_price'] = parse.getNumberIfPositive(data.custom_price);
     }
 
     return item;

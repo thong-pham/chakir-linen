@@ -58,7 +58,7 @@ export const getOrderFieldLabelByKey = (key) => {
       return messages.phone;
     case 'company':
       return messages.company;
-    case 'mobile':
+    case 'phone':
       return messages.mobile;
     case 'city':
       return messages.city;

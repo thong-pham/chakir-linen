@@ -49,10 +49,17 @@ export default(state = initialState, action) => {
       return Object.assign({}, state, {settings: action.settings})
     case t.EMAIL_SETTINGS_RECEIVE:
       return Object.assign({}, state, {emailSettings: action.emailSettings})
+
     case t.EMAIL_TEMPLATE_REQUEST:
       return Object.assign({}, state, {emailTemplate: null})
     case t.EMAIL_TEMPLATE_RECEIVE:
       return Object.assign({}, state, {emailTemplate: action.emailTemplate})
+
+    case t.EMAIL_TEMPLATES_REQUEST:
+      return Object.assign({}, state, {emailTemplates: null})
+    case t.EMAIL_TEMPLATES_RECEIVE:
+      return Object.assign({}, state, {emailTemplates: action.emailTemplates})
+
     case t.SHIPPING_METHODS_RECEIVE:
       return Object.assign({}, state, {shippingMethods: action.shippingMethods})
     case t.PAYMENT_METHODS_RECEIVE:

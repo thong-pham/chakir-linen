@@ -28,13 +28,13 @@ class OrderAddressService {
     }
     const orderObjectID = new ObjectID(id);
     const shipping_address = this.getValidDocumentForUpdate(id, data, 'shipping_address');
-
     return mongo.db.collection('orders').updateOne({
       _id: orderObjectID
     }, {$set: shipping_address}).then(res => OrdersService.getSingleOrder(id))
   }
 
   getValidDocumentForUpdate(id, data, addressTypeName) {
+
     const keys = Object.keys(data);
     if (keys.length === 0) {
       return new Error('Required fields are missing');
@@ -45,9 +45,13 @@ class OrderAddressService {
     keys.forEach(key => {
       const value = data[key];
       if(key === 'coordinates' || key === 'details'){
-        address[`${addressTypeName}.${key}`] = value;
-      } else {
-        address[`${addressTypeName}.${key}`] = parse.getString(value);
+         address[`${addressTypeName}.${key}`] = value;
+      }
+      else if (key === 'residential') {
+         address[`${addressTypeName}.${key}`] = parse.getBooleanIfValid(value, false);
+      }
+      else {
+         address[`${addressTypeName}.${key}`] = parse.getString(value);
       }
     })
 

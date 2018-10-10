@@ -18,6 +18,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     onSubmit: (values) => {
+      //console.log(values);
       dispatch(updateShippingAddress(values, ownProps.history));
     },
     saveForm: () => {

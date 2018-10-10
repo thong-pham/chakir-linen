@@ -20,6 +20,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
       if (!values.country){
           values.country = 'United States';
       }
+      //console.log(values);
       dispatch(addShippingAddress(values, ownProps.history));
     },
     saveForm: () => {

@@ -28,6 +28,9 @@ class EmailTemplate extends React.Component {
         <Paper className="paper-box" zDepth={1}>
           <div className={style.innerBox}>
             <div>
+              <Field component={TextField} fullWidth={true} name="name" floatingLabelText={messages.settings_emailTemplateName}/>
+            </div>
+            <div>
               <Field component={TextField} fullWidth={true} name="subject" floatingLabelText={messages.settings_emailSubject}/>
             </div>
             <div>

@@ -105,7 +105,7 @@ const CategoryContainer = (props) => {
           <div className="columns">
 
             {showFilter === true &&
-              <div className="column is-one-quarter left-sidebar">
+              <div className="column is-one-fifth left-sidebar">
                 <ProductFilter {...props} />
               </div>
             }

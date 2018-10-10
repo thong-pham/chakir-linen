@@ -63,9 +63,9 @@ a:hover {
     color: #FF7F50;
 }
 
-p, strong {
-    height: 30px;
-}
+// p, strong {
+//     height: 30px;
+// }
 
 hr.separator {
   margin: 1rem 0;
@@ -131,4 +131,5 @@ MOBILE
 @import "product.scss";
 @import "page.scss";
 @import "custom.scss";
-@import "register.scss";
+@import "form.scss";
+@import "progress.scss";

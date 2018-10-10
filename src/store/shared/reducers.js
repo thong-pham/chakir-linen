@@ -102,6 +102,18 @@ const appReducer = (state = initialState, action) => {
     case t.UPDATE_PRICE:{
         return Object.assign({}, state, {shippingMethods: action.data})
     }
+
+    case t.USER_CREATE_STARTED: {
+        return Object.assign({}, state, {isCreatingUser: true})
+    }
+    case t.USER_CREATE_FULFILLED:{
+        return Object.assign({}, state, {isCreatingUser: false, creatingUserError: false})
+    }
+    case t.USER_CREATE_REJECTED: {
+        const error = action.payload.message;
+        return Object.assign({}, state, {isCreatingUser: false, creatingUserError: error})
+    }
+
     case t.USER_LOGIN_STARTED: {
         return Object.assign({}, state, {isLoggingIn: true})
     }
@@ -128,19 +140,19 @@ const appReducer = (state = initialState, action) => {
         return Object.assign({}, state, { changePasswordError: error});
     }
     case t.GET_TOKEN_USER:{
-        return Object.assign({}, state, {token: action.data.token, user: action.data.user})
+        return Object.assign({}, state, {token: action.data.token, user_id: action.data.user_id})
     }
     case t.FILL_ORDERS:{
-        return Object.assign({}, state, {orders: action.data})
+        return Object.assign({}, state, {orders: action.payload})
     }
     case t.FILL_ADDRESSES:{
-        return Object.assign({}, state, {shippingAddresses: action.data})
+        return Object.assign({}, state, {shippingAddresses: action.payload})
     }
     case t.FILL_USER:{
         return Object.assign({}, state, {userInfo: action.payload})
     }
     case t.DELETE_ADDRESS:{
-        const id = action.addressId;
+        const id = action.payload.addressId;
         var index = 0;
         for (var i = 0; i < state.shippingAddresses.length; i++){
             if (state.shippingAddresses[i].id === id ){
@@ -151,9 +163,22 @@ const appReducer = (state = initialState, action) => {
         return Object.assign({}, state );
     }
     case t.EDIT_ADDRESS:{
-        const id = action.id;
+        const id = action.payload.id;
         const editAddress = state.shippingAddresses.filter(element => element.id === id)[0];
         return Object.assign({}, state, {editAddress: editAddress});
+    }
+    case t.REVIEW_PRODUCT: {
+        const item = action.payload;
+        return Object.assign({}, state, {reviewItem: item})
+    }
+    case t.HIDE_DEAL: {
+        return Object.assign({}, state, {dealView: false})
+    }
+    case t.HIDE_QUANTITY: {
+        return Object.assign({}, state, {quantityView: false})
+    }
+    case t.SHOW_QUANTITY: {
+        return Object.assign({}, state, {quantityView: true})
     }
     default:
       return state

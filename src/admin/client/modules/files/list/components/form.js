@@ -44,6 +44,7 @@ class FileItem extends React.Component {
 
   render() {
     const { file, settings } = this.props;
+    console.log(file);
     const fileName = file.file;
     const fileUrl = `${settings.domain}/${file.file}`;
     const modifiedDate = moment(file.modified);

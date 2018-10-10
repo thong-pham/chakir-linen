@@ -9,7 +9,7 @@ class UserGroupsService {
   constructor() {}
 
   getGroups(params = {}) {
-    return mongo.db.collection('customerGroups').find().toArray().then(items => items.map(item => this.changeProperties(item)))
+    return mongo.db.collection('userGroups').find().toArray().then(items => items.map(item => this.changeProperties(item)))
   }
 
   getSingleGroup(id) {
@@ -18,12 +18,12 @@ class UserGroupsService {
     }
     let groupObjectID = new ObjectID(id);
 
-    return mongo.db.collection('customerGroups').findOne({_id: groupObjectID}).then(item => this.changeProperties(item))
+    return mongo.db.collection('userGroups').findOne({_id: groupObjectID}).then(item => this.changeProperties(item))
   }
 
   addGroup(data) {
     const group = this.getValidDocumentForInsert(data);
-    return mongo.db.collection('customerGroups').insertMany([group]).then(res => this.getSingleGroup(res.ops[0]._id.toString()));
+    return mongo.db.collection('userGroups').insertMany([group]).then(res => this.getSingleGroup(res.ops[0]._id.toString()));
   }
 
   updateGroup(id, data) {
@@ -33,7 +33,7 @@ class UserGroupsService {
     const groupObjectID = new ObjectID(id);
     const group = this.getValidDocumentForUpdate(id, data);
 
-    return mongo.db.collection('customerGroups').updateOne({
+    return mongo.db.collection('userGroups').updateOne({
       _id: groupObjectID
     }, {$set: group}).then(res => this.getSingleGroup(id));
   }
@@ -43,7 +43,7 @@ class UserGroupsService {
       return Promise.reject('Invalid identifier');
     }
     const groupObjectID = new ObjectID(id);
-    return mongo.db.collection('customerGroups').deleteOne({'_id': groupObjectID}).then(deleteResponse => {
+    return mongo.db.collection('userGroups').deleteOne({'_id': groupObjectID}).then(deleteResponse => {
       return deleteResponse.deletedCount > 0;
     });
   }

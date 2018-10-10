@@ -1,7 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import api from '../../lib/api';
+import storeSettings from '../../../../config/store'
 import ProductList from '../productList';
+import axios from 'axios'
 
 export default class CustomProducts extends React.Component {
 	static propTypes = {
@@ -58,16 +60,16 @@ export default class CustomProducts extends React.Component {
 	};
 
 	componentDidMount() {
-		this.isCancelled = false;
-		this.fetchProducts(this.props);
+			this.isCancelled = false;
+			this.fetchProducts(this.props);
 	}
 
 	componentWillReceiveProps(nextProps) {
-		this.fetchProducts(nextProps);
+			this.fetchProducts(nextProps);
 	}
 
 	componentWillUnmount() {
-		this.isCancelled = true;
+			this.isCancelled = true;
 	}
 
 	fetchProducts = ({
@@ -93,7 +95,7 @@ export default class CustomProducts extends React.Component {
 			price_to,
 			sort,
 			fields:
-				'path,id,name,category_id,category_name,sku,images,enabled,discontinued,stock_status,stock_quantity,price,on_sale,regular_price,attributes,tags',
+				'path,id,name,category_id,category_name,sku,images,enabled,discontinued,stock_status,stock_quantity,price,on_sale,regular_price,prices,attributes,tags,reviews,rates',
 			limit: limit || 4,
 			offset: 0
 		};
@@ -103,18 +105,20 @@ export default class CustomProducts extends React.Component {
 				filter[`attributes.${attr.name}`] = attr.value;
 			});
 		}
-
-		api.ajax.products
-			.list(filter)
-			.then(({ status, json }) => {
+		//const query = Object.keys(filter).map(key => key + '=' + filter[key]).join('&');
+		api.ajax.products.list(filter)
+		//axios.post(storeSettings.ajaxBaseUrl + "/products", filter)
+			.then(response => {
 				if (!this.isCancelled) {
-					this.setState({
-						products: json.data
-					});
+					this.setState({ products: response.json.data });
+				}
+				if (on_sale && response.json.data.length === 0){
+						this.props.hideDeal();
 				}
 			})
 			.catch(() => {});
 	};
+
 
 	render() {
 		const {
@@ -126,26 +130,30 @@ export default class CustomProducts extends React.Component {
 			columnCountOnTablet,
 			columnCountOnDesktop,
 			columnCountOnWidescreen,
-			columnCountOnFullhd
+			columnCountOnFullhd,
+			on_sale,
+			showDeal,
+			userInfo
 		} = this.props;
 
 		const { products } = this.state;
 
 		return (
-			<ProductList
-				products={products}
-				addCartItem={addCartItem}
-				settings={settings}
-				loadMoreProducts={null}
-				hasMore={false}
-				columnCountOnMobile={columnCountOnMobile}
-				columnCountOnTablet={columnCountOnTablet}
-				columnCountOnDesktop={columnCountOnDesktop}
-				columnCountOnWidescreen={columnCountOnWidescreen}
-				columnCountOnFullhd={columnCountOnFullhd}
-				isCentered={isCentered}
-				className={className}
-			/>
+				<ProductList
+					products={products}
+					addCartItem={addCartItem}
+					settings={settings}
+					loadMoreProducts={null}
+					hasMore={false}
+					columnCountOnMobile={columnCountOnMobile}
+					columnCountOnTablet={columnCountOnTablet}
+					columnCountOnDesktop={columnCountOnDesktop}
+					columnCountOnWidescreen={columnCountOnWidescreen}
+					columnCountOnFullhd={columnCountOnFullhd}
+					isCentered={isCentered}
+					className={className}
+					userInfo={userInfo}
+				/>
 		);
 	}
 }

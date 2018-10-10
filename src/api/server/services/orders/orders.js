@@ -201,6 +201,7 @@ class OrdersService {
     })
   }
 
+
   async addOrder(data) {
     const order = await this.getValidDocumentForInsert(data);
     const insertResponse = await mongo.db.collection('orders').insertMany([order]);
@@ -215,12 +216,34 @@ class OrdersService {
     }
     const orderObjectID = new ObjectID(id);
     const orderData = await this.getValidDocumentForUpdate(id, data);
+
     const updateResponse = await mongo.db.collection('orders').updateOne({_id: orderObjectID}, {$set: orderData});
     const updatedOrder = await this.getSingleOrder(id);
     if(updatedOrder.draft === false){
       await webhooks.trigger({ event: webhooks.events.ORDER_UPDATED, payload: updatedOrder });
     }
     await this.updateUserStatistics(updatedOrder.user_id);
+
+    if (orderData.status_id){
+        const orderStatuses = await OrderStatusesService.getStatuses();
+        if (orderStatuses){
+            orderStatuses.forEach(status => {
+                if (status.id === orderData.status_id.toString()){
+                    const statusName = status.name;
+                    if (statusName === 'Shipped'){
+                        this.sendEmailToCustomer('shipping_confirmation', updatedOrder);
+                    }
+                    else if (statusName === 'Delivered'){
+                        this.sendEmailToCustomer('delivered_confirmation', updatedOrder);
+                    }
+                    else if (statusName === 'Cancelled'){
+                        this.sendEmailToCustomer('cancelled_confirmation', updatedOrder);
+                    }
+                }
+            })
+        }
+    }
+
     return updatedOrder;
   }
 
@@ -230,9 +253,31 @@ class OrdersService {
     }
     const orderObjectID = new ObjectID(orderId);
     const order = await this.getSingleOrder(orderId);
+    if (order.user_id){
+        await UsersService.deleteCurrentOrder(order.user_id);
+    }
+
     await webhooks.trigger({ event: webhooks.events.ORDER_DELETED, payload: order });
     const deleteResponse = await mongo.db.collection('orders').deleteOne({_id: orderObjectID});
     return deleteResponse.deletedCount > 0;
+  }
+
+  async sendEmailToCustomer (template, order){
+
+      const emailTemplate = await EmailTemplatesService.getEmailTemplate(template);
+      const dashboardSettings = await SettingsService.getSettings();
+      const subject = this.getEmailSubject(emailTemplate, order);
+
+      const body = this.getEmailBody(emailTemplate, order);
+      const copyTo = dashboardSettings.order_confirmation_copy_to;
+
+      await Promise.all([
+        webhooks.trigger({ event: webhooks.events.ORDER_UPDATED, payload: order }),
+        this.sendAllMails(order.email, copyTo, subject, body)
+      ]);
+
+      return order;
+
   }
 
   parseDiscountItem(discount) {
@@ -627,14 +672,13 @@ class OrdersService {
     }
 
     const [order, emailTemplate, dashboardSettings] = await Promise.all([
-      this.getOrCreateCustomer(orderId).then(user_id => {
-        return this.updateOrder(orderId, {
-          user_id: user_id,
+      //this.getOrCreateCustomer(orderId).then(user_id => {
+      this.updateOrder(orderId, {
           date_placed: new Date(),
           draft: false,
           status_id: status_id
-        })
-      }),
+        }),
+      //}),
       EmailTemplatesService.getEmailTemplate('order_confirmation'),
       SettingsService.getSettings(),
     ]);
@@ -650,21 +694,25 @@ class OrdersService {
     });
 
     await Promise.all([
-      webhooks.trigger({ event: webhooks.events.ORDER_CREATED, payload: order }),
-      this.sendAllMails(order.email, copyTo, subject, body),
-      ProductStockService.handleOrderCheckout(orderId)
+        webhooks.trigger({ event: webhooks.events.ORDER_CREATED, payload: order }),
+        this.sendAllMails(order.email, copyTo, subject, body),
+        ProductStockService.handleOrderCheckout(orderId)
     ]);
+
+    if (order.user_id){
+        await UsersService.deleteCurrentOrder(order.user_id);
+    }
 
     return order;
   }
 
   cancelOrder(orderId) {
-    const orderData = {
-      cancelled: true,
-      date_cancelled: new Date()
-    };
+      const orderData = {
+        cancelled: true,
+        date_cancelled: new Date()
+      };
 
-    return ProductStockService.handleCancelOrder(orderId).then(() => this.updateOrder(orderId, orderData));
+      return ProductStockService.handleCancelOrder(orderId).then(() => this.updateOrder(orderId, orderData));
   }
 
   closeOrder(orderId) {
@@ -688,7 +736,7 @@ class OrdersService {
               ordersCount++;
             }
             if(order.paid === true || order.closed === true){
-              totalSpent += order.grand_total;
+              totalSpent += order.order_total;
             }
           }
         }
@@ -712,7 +760,7 @@ class OrdersService {
               ordersCount++;
             }
             if(order.paid === true || order.closed === true){
-              totalSpent += order.grand_total;
+              totalSpent += order.order_total;
             }
           }
         }

@@ -112,7 +112,7 @@ class EditShippingMethodForm extends React.Component {
               </div>
             </div>
 
-            <div className="row" style={{ marginTop: '40px' }}>
+            {/*<div className="row" style={{ marginTop: '40px' }}>
               <div className="col-xs-12 col-sm-4">
                 <div className="blue-title">{messages.settings_checkoutFields}</div>
                 <div className="field-hint">Standard:
@@ -129,7 +129,7 @@ class EditShippingMethodForm extends React.Component {
               <div className="col-xs-12 col-sm-8">
                 <FieldArray name="fields" component={FieldsEditor}/>
               </div>
-            </div>
+            </div>*/}
 
           </div>
           <div className="buttons-box">

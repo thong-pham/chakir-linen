@@ -30,14 +30,6 @@ class CheckoutStepContacts extends React.Component {
      this.props.onLoad();
   }
 
-  // componentWillReceiveProps(nextProps) {
-  //   if(this.props.show !== nextProps.show){
-  //     this.setState({
-  //       done: !nextProps.show
-  //     });
-  //   }
-  // }
-
   handleSave = () => {
     this.setState({
       done: true
@@ -87,7 +79,8 @@ class CheckoutStepContacts extends React.Component {
 
   getFieldPlaceholder = (fieldName) => {
     const field = this.getField(fieldName);
-    return field && field.placeholder && field.placeholder.length > 0 ? field.placeholder : '';
+    const placeholder = this.getFieldLabelText(fieldName);
+    return field && field.placeholder && field.placeholder.length > 0 ? field.placeholder : placeholder;
   }
 
   getFieldLabelText = (fieldName) => {
@@ -136,17 +129,8 @@ class CheckoutStepContacts extends React.Component {
       valid,
       reset,
       submitting,
-      loadingShippingMethods,
-      loadingPaymentMethods,
       initialValues,
       settings,
-      saveShippingCountry,
-      saveShippingState,
-      saveShippingCity,
-      saveShippingMethod,
-      savePaymentMethod,
-      paymentMethods,
-      shippingMethods,
       inputClassName,
       buttonClassName,
       editButtonClassName
@@ -185,38 +169,6 @@ class CheckoutStepContacts extends React.Component {
             </div>
           }
 
-
-          {/*{!this.isFieldHidden('country') &&
-            <div className="checkout-field-preview">
-              <div className="name">{text.country}</div>
-              <div className="value">{initialValues.shipping_address.country}</div>
-            </div>
-          }
-
-          {!this.isFieldHidden('state') &&
-            <div className="checkout-field-preview">
-              <div className="name">{text.state}</div>
-              <div className="value">{initialValues.shipping_address.state}</div>
-            </div>
-          }
-
-          {!this.isFieldHidden('city') &&
-            <div className="checkout-field-preview">
-              <div className="name">{text.city}</div>
-              <div className="value">{initialValues.shipping_address.city}</div>
-            </div>
-          }
-
-          <div className="checkout-field-preview">
-            <div className="name">{text.shippingMethod}</div>
-            <div className="value">{initialValues.shipping_method}</div>
-          </div>
-
-          <div className="checkout-field-preview">
-            <div className="name">{text.paymentMethod}</div>
-            <div className="value">{initialValues.payment_method}</div>
-          </div>*/}
-
           <div className="checkout-button-wrap">
             <button
               type="button"
@@ -235,94 +187,31 @@ class CheckoutStepContacts extends React.Component {
 
             {!this.isFieldHidden('firstName') &&
               <Field className={inputClassName} name="firstName" id="customer.firstName" component={inputField} type="text"
-                label={this.getFieldLabel('firstName')}
+                //label={this.getFieldLabel('firstName')}
                 validate={this.getFieldValidators('firstName')}
                 placeholder={this.getFieldPlaceholder('firstName')}/>
             }
 
             {!this.isFieldHidden('lastName') &&
               <Field className={inputClassName} name="lastName" id="customer.lastName" component={inputField} type="text"
-                label={this.getFieldLabel('lastName')}
+                //label={this.getFieldLabel('lastName')}
                 validate={this.getFieldValidators('lastName')}
                 placeholder={this.getFieldPlaceholder('lastName')}/>
             }
 
             {!this.isFieldHidden('email') &&
               <Field className={inputClassName} name="email" id="customer.email" component={inputField} type="email"
-                label={this.getFieldLabel('email')}
+                //label={this.getFieldLabel('email')}
                 validate={this.getFieldValidators('email')}
                 placeholder={this.getFieldPlaceholder('email')}/>
             }
 
             {!this.isFieldHidden('mobile') &&
               <Field className={inputClassName} name="mobile" id="customer.mobile" component={inputField} type="tel"
-                label={this.getFieldLabel('mobile')}
+                //label={this.getFieldLabel('mobile')}
                 validate={this.getFieldValidators('mobile')}
                 placeholder={this.getFieldPlaceholder('mobile')}/>
             }
-
-            {/*<h2>{text.shippingTo}</h2>
-
-            {!this.isFieldHidden('country') &&
-              <Field className={inputClassName} name="shipping_address.country" id="shipping_address.country" component={inputField} type="text"
-                label={this.getFieldLabel('country')}
-                validate={this.getFieldValidators('country')}
-                placeholder={this.getFieldPlaceholder('country')}
-                onBlur={(event, value) => setTimeout(() => saveShippingCountry(value))}/>
-            }
-
-            {!this.isFieldHidden('state') &&
-              <Field className={inputClassName} name="shipping_address.state" id="shipping_address.state" component={inputField} type="text"
-                label={this.getFieldLabel('state')}
-                validate={this.getFieldValidators('state')}
-                placeholder={this.getFieldPlaceholder('state')}
-                onBlur={(event, value) => setTimeout(() => saveShippingState(value))}/>
-            }
-
-            {!this.isFieldHidden('city') &&
-              <Field className={inputClassName} name="shipping_address.city" id="shipping_address.city" component={inputField} type="text"
-                label={this.getFieldLabel('city')}
-                validate={this.getFieldValidators('city')}
-                placeholder={this.getFieldPlaceholder('city')}
-                onBlur={(event, value) => setTimeout(() => saveShippingCity(value))}/>
-            }
-
-            <h2>{text.shippingMethods} {loadingShippingMethods && <small>{text.loading}</small>}</h2>
-            <div className="shipping-methods">
-              {shippingMethods.map((method, index) => <label key={index} className={'shipping-method' + (method.id === initialValues.shipping_method_id ? ' active': '')}>
-                <Field
-                  name="shipping_method_id"
-                  component="input"
-                  type="radio"
-                  value={method.id}
-                  onClick={() => saveShippingMethod(method.id)}
-                />
-                <div>
-                  <div className="shipping-method-name">{method.name}</div>
-                  <div className="shipping-method-description">{method.description}</div>
-                </div>
-                <span className="shipping-method-rate">{formatCurrency(method.price, settings)}</span>
-              </label>)}
-            </div>
-
-            <h2>{text.paymentMethods} {loadingPaymentMethods && <small>{text.loading}</small>}</h2>
-            <div className="payment-methods">
-              {paymentMethods.map((method, index) => <label key={index} className={'payment-method' + (method.id === initialValues.payment_method_id ? ' active': '')}>
-                <Field
-                  name="payment_method_id"
-                  validate={[validateRequired]}
-                  component="input"
-                  type="radio"
-                  value={method.id}
-                  onClick={() => savePaymentMethod(method.id)}
-                />
-                <div>
-                  <div className="payment-method-name">{method.name}</div>
-                  <div className="payment-method-description">{method.description}</div>
-                </div>
-                <span className="payment-method-logo"></span>
-              </label>)}
-            </div>*/}
 
             <div className="checkout-button-wrap">
               <button
