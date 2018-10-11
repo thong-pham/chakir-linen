@@ -401,5 +401,11 @@ ajaxRouter.get('/payment_form_settings/:order_id', (req, res, next) => {
 })
 
 
+ajaxRouter.get('/user_groups', (req, res, next) => {
+    axios.get(restApi.url + "/user_groups", { headers: restApi.headers })
+      .then(response => { res.status(response.status).send(response.data) })
+      .catch(error => { console.log(error) })
+})
+
 
 module.exports = ajaxRouter;

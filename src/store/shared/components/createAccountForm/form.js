@@ -3,6 +3,7 @@ import {Field, reduxForm} from 'redux-form'
 import text from '../../text'
 import { formatCurrency } from '../../lib/helper'
 import axios from 'axios'
+import storeSettings from '../../../client/settings'
 
 const URL = "http://localhost:3001/api/v1/";
 
@@ -45,12 +46,9 @@ class CreateAccountForm extends React.Component {
           this.props.history.push('/');
       }
       else {
-        return axios.get(URL + "user_groups")
+        return axios.get(storeSettings.ajaxBaseUrl + "/user_groups")
           .then(response => {
-              return response.data;
-          })
-          .then(json => {
-              this.setState({groups: json});
+              this.setState({groups: response.data});
           })
           .catch(error => {
               console.log(error.response);
