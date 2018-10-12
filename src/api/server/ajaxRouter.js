@@ -14,7 +14,7 @@ const restApi = {
         'Authorization' : 'Bearer ' + STORE_ACCESS_TOKEN
     },
     url: serverSettings.apiBaseUrl
-}
+};
 
 const api = new CezerinClient({
     apiBaseUrl: serverSettings.apiBaseUrl,
