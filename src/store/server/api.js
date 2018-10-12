@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import CezerinClient from 'cezerin-client'
 import serverSettings from './settings'
 
-const TOKEN_PAYLOAD = {email: 'admin@chakirhospitality.com', scopes: ['admin']};
+const TOKEN_PAYLOAD = {email: 'admin@chakirlinen.com', scopes: ['admin']};
 const STORE_ACCESS_TOKEN = jwt.sign(TOKEN_PAYLOAD, serverSettings.jwtSecretKey);
 
 const api = new CezerinClient({
