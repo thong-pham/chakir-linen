@@ -68,3 +68,5 @@ docs
 theme/assets/js
 
 public/admin-assets/js
+
+package-lock.json
