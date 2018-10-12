@@ -66,7 +66,11 @@ dist
 docs
 
 theme/assets/js
+theme/assets/index.html
+theme/assets/css/bundle-*
 
 public/admin-assets/js
+public/admin/index.html
+public/admin-assets/css/bundle-*
 
 package-lock.json

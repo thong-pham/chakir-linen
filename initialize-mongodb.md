@@ -42,7 +42,7 @@ db.tokens.insert({
   date_created: new Date(),
   expiration: 720,
   name: 'admin',
-  email: 'admin@chakirhospitality.com',
+  email: 'admin@chakirlinen.com',
   scopes: ['admin']  
 });
 ```
@@ -56,7 +56,7 @@ db.emailSettings.insert({
   user: 'apikey',
   pass: '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',
   from_name: 'Admin',
-  from_address: 'admin@chakirhospitality.com'
+  from_address: 'admin@chakirlinen.com'
 });
 ```
 

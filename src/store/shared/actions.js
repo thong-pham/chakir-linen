@@ -12,7 +12,7 @@ import axios from 'axios'
 import jwt from 'jsonwebtoken'
 
 const restApi = () => {
-    const TOKEN_PAYLOAD = {email: 'admin@chakirhospitality.com', scopes: ['admin']};
+    const TOKEN_PAYLOAD = {email: 'admin@chakirlinen.com', scopes: ['admin']};
     const STORE_ACCESS_TOKEN = localStorage.getItem('token') || jwt.sign(TOKEN_PAYLOAD, serverSettings.jwtSecretKey);
     return {
         headers: {

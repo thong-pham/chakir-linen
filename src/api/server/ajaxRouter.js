@@ -5,7 +5,7 @@ const CezerinClient = require('cezerin-client');
 const serverSettings = require('./lib/settings');
 const axios = require('axios');
 
-const TOKEN_PAYLOAD = {email: 'admin@chakirhospitality.com', scopes: ['admin']};
+const TOKEN_PAYLOAD = {email: 'admin@chakirlinen.com', scopes: ['admin']};
 const STORE_ACCESS_TOKEN = jwt.sign(TOKEN_PAYLOAD, serverSettings.jwtSecretKey);
 
 const restApi = {
