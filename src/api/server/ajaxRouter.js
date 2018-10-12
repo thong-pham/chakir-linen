@@ -273,7 +273,7 @@ ajaxRouter.put('/cart/items/:item_id', (req, res, next) => {
 })
 
 ajaxRouter.put('/cart/checkout/:order_id', (req, res, next) => {
-  const order_id = req.params.order_id ? req.params.order_id : req.signedCookies.order_id;
+  const order_id = req.params.order_id;
   if (order_id) {
     api.orders.checkout(order_id).then(cartResponse => fillCartItems(cartResponse)).then(({status, json}) => {
       res.clearCookie('order_id');

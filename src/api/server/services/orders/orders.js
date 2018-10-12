@@ -19,6 +19,7 @@ const ShippingMethodsLightService = require('./shippingMethodsLight');
 const EmailTemplatesService = require('../settings/emailTemplates');
 const ProductStockService = require('../products/stock');
 const SettingsService = require('../settings/settings');
+//const PaymentGateways = require('../../paymentGateways')
 
 class OrdersService {
   constructor() {}
@@ -771,6 +772,12 @@ class OrdersService {
       return null;
     }
   }
+
+  // async chargeOrder(order_id){
+  //     const order = await this.getSingleOrder(order_id);
+  //     const isSuccess = await PaymentGateways.processOrderPayment(order);
+  //     return isSuccess;
+  // }
 }
 
 module.exports = new OrdersService();

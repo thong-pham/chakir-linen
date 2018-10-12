@@ -28,6 +28,7 @@ class OrdersRoute {
     this.router.put('/v1/orders/:id/checkout', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.checkoutOrder.bind(this));
     this.router.put('/v1/orders/:id/cancel', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.cancelOrder.bind(this));
     this.router.put('/v1/orders/:id/close', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.closeOrder.bind(this));
+    //this.router.put('/v1/orders/:id/charge', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.chargeOrder.bind(this));
 
     this.router.put('/v1/orders/:id/billing_address', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.updateBillingAddress.bind(this));
     this.router.put('/v1/orders/:id/shipping_address', security.checkUserScope.bind(this, security.scope.WRITE_ORDERS), this.updateShippingAddress.bind(this));
@@ -216,6 +217,13 @@ class OrdersRoute {
       res.send(data);
     }).catch(next);
   }
+
+  // chargeOrder(req, res, next){
+  //     const order_id = req.params.id;
+  //     OrdersService.chargeOrder(order_id).then(isSuccess => {
+  //         res.status(isSuccess ? 200 : 500).end();
+  //     }).catch(next)
+  // }
 }
 
 module.exports = OrdersRoute;

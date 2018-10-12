@@ -26,7 +26,7 @@ const getPaymentFormSettings = (options) => {
 
 const paymentNotification = (options) => {
   const { gateway, gatewaySettings, req, res } = options;
-  const settings = {'allow_sandbox': true};
+  const settings = { allow_sandbox: true };
   const params = req.body;
   const orderId = params.custom;
   const paymentCompleted = params.payment_status === 'Completed';
@@ -59,9 +59,7 @@ const verify = (params, settings) => {
   return new Promise((resolve, reject) => {
 
     if (!settings) {
-      settings = {
-        'allow_sandbox': false
-      };
+      settings = { allow_sandbox: false };
     }
 
     if (!params || Object.keys(params).length === 0) {

@@ -28,7 +28,6 @@ export default class CheckoutStepPayment extends React.Component {
     } = this.props;
 
     const { payment_method_gateway, grand_total, id } = cart;
-
     if(!this.props.show){
       return (
         <div className="checkout-step">

@@ -64,8 +64,8 @@ const getCurrentOrder = (user_id) => {
             .catch(error => { console.log(error.response) })
 }
 
-const addCurrentOrder = (userId, orderId) => {
-    return axios.put(restApi().url + "/users/" + userId + "/addCurrentOrder/" + orderId, { headers: restApi().headers })
+const addCurrentOrder = (user_id, order_id) => {
+    return axios.put(restApi().url + "/users/" + user_id + "/addCurrentOrder/" + order_id, { headers: restApi().headers })
             .then(response => response.data)
             .catch(error => { console.log(error.response) })
 }
