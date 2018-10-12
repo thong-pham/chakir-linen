@@ -15,15 +15,18 @@ const dbPass = process.env.DB_PASS || 'chakirlinen123';
 const dbCred = dbUser.length > 0 || dbPass.length > 0 ? `${dbUser}:${dbPass}@` : '';
 const dbUrl = `mongodb://${dbCred}${dbHost}:${dbPort}/${dbName}`;
 
+const URL = 'http://34.209.139.108';
+//const URL = 'http://localhost'
+
 module.exports = {
   // used by Store (server side)
-  apiBaseUrl: `http://localhost:3001/api/v1`,
+  apiBaseUrl: `${URL}:3001/api/v1`,
 
   // used by Store (server and client side)
-  ajaxBaseUrl: `http://localhost:3001/ajax`,
+  ajaxBaseUrl: `${URL}:3001/ajax`,
 
   // Access-Control-Allow-Origin
-  storeBaseUrl: `http://localhost:3000`,
+  storeBaseUrl: `${URL}:3000`,
 
   // used by API
   adminLoginUrl: '/admin/login',

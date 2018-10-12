@@ -1,7 +1,10 @@
 // config used by store client side only
+const URL = 'http://34.209.139.108';
+//const URL = 'http://localhost'
+
 module.exports = {
   // store UI language
   language: 'en',
-  ajaxBaseUrl: 'http://localhost:3001/ajax',
-  apiBaseUrl: 'http://localhost:3001/api/v1'
+  ajaxBaseUrl: `${URL}:3001/ajax`,
+  apiBaseUrl: `${URL}:3001/api/v1`
 }
