@@ -16,6 +16,7 @@ const dbCred = dbUser.length > 0 || dbPass.length > 0 ? `${dbUser}:${dbPass}@` :
 const dbUrl = `mongodb://${dbCred}${dbHost}:${dbPort}/${dbName}`;
 
 const URL = 'http://34.209.139.108';
+//const URL = 'http://www.chakirlinen.com'
 //const URL = 'http://localhost'
 
 module.exports = {
@@ -26,7 +27,7 @@ module.exports = {
   ajaxBaseUrl: `${URL}:3001/ajax`,
 
   // Access-Control-Allow-Origin
-  storeBaseUrl: `${URL}`,
+  storeBaseUrl: `http://www.chakirlinen.com`,
 
   // used by API
   adminLoginUrl: '/admin/login',
