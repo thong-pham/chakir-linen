@@ -1,23 +1,23 @@
 // config used by server side only
 
-// const dbHost = process.env.DB_HOST || '127.0.0.1';
-// const dbPort = process.env.DB_PORT || 27017;
-// const dbName = process.env.DB_NAME || 'shop'
-// const dbUser = process.env.DB_USER || '';
-// const dbPass = process.env.DB_PASS || '';
+const dbHost = process.env.DB_HOST || '127.0.0.1';
+const dbPort = process.env.DB_PORT || 27017;
+const dbName = process.env.DB_NAME || 'shop'
+const dbUser = process.env.DB_USER || '';
+const dbPass = process.env.DB_PASS || '';
 
-const dbHost = process.env.DB_HOST || 'ds121183.mlab.com';
-const dbPort = process.env.DB_PORT || 21183;
-const dbName = process.env.DB_NAME || 'chakir-linen'
-const dbUser = process.env.DB_USER || 'chakirlinen';
-const dbPass = process.env.DB_PASS || 'chakirlinen123';
+// const dbHost = process.env.DB_HOST || 'ds121183.mlab.com';
+// const dbPort = process.env.DB_PORT || 21183;
+// const dbName = process.env.DB_NAME || 'chakir-linen'
+// const dbUser = process.env.DB_USER || 'chakirlinen';
+// const dbPass = process.env.DB_PASS || 'chakirlinen123';
 
 const dbCred = dbUser.length > 0 || dbPass.length > 0 ? `${dbUser}:${dbPass}@` : '';
 const dbUrl = `mongodb://${dbCred}${dbHost}:${dbPort}/${dbName}`;
 
-const URL = 'http://34.209.139.108';
+//const URL = 'http://34.209.139.108';
 //const URL = 'http://www.chakirlinen.com'
-//const URL = 'http://localhost'
+const URL = 'http://localhost'
 
 module.exports = {
   // used by Store (server side)
@@ -27,7 +27,7 @@ module.exports = {
   ajaxBaseUrl: `${URL}:3001/ajax`,
 
   // Access-Control-Allow-Origin
-  storeBaseUrl: `http://www.chakirlinen.com`,
+  storeBaseUrl: `${URL}`,
 
   // used by API
   adminLoginUrl: '/admin/login',

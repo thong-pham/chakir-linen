@@ -198,7 +198,7 @@ class CreateAccountForm extends React.Component {
     if (groups && groups.length > 0){
         groupView = groups.map(group =>
           <div key={group.id} className="column is-6">
-            <label><Field className="form-field-radio" name="customerType" id="customer.customerType" component={inputField} type="radio"
+            <label><Field className="form-field-radio" name="customerType" component={inputField} type="radio"
               validate={this.getFieldValidators('customerType')}
               value={group.name} onChange={this.chooseType}/>{' '} {group.name}</label>
           </div>
@@ -296,10 +296,10 @@ class CreateAccountForm extends React.Component {
                       <label>Are you in California</label>
                     </div>
                     <div className="column is-3">
-                      <label><Field className="form-field-radio" name="inState" id="customer.inState" component={inputField} type="radio" value="true" onChange={this.inState}/> Yes</label>
+                      <label><Field className="form-field-radio" name="inState" component={inputField} type="radio" value="true" onChange={this.inState}/> Yes</label>
                     </div>
                     <div className="column is-3">
-                      <label><Field className="form-field-radio" name="inState" id="customer.inState" component={inputField} type="radio" value="false" onChange={this.inState}/> No</label>
+                      <label><Field className="form-field-radio" name="inState" component={inputField} type="radio" value="false" onChange={this.inState}/> No</label>
                     </div>
                   </div>
                 }
@@ -310,10 +310,10 @@ class CreateAccountForm extends React.Component {
                       <label>Do you have a reseller license</label>
                     </div>
                     <div className="column is-3">
-                      <label><Field className="form-field-radio" name="license" id="customer.license" component={inputField} type="radio" value="true"/> Yes</label>
+                      <label><Field className="form-field-radio" name="license" component={inputField} type="radio" value="true"/> Yes</label>
                     </div>
                     <div className="column is-3">
-                      <label><Field className="form-field-radio" name="license" id="customer.license" component={inputField} type="radio" value="false"/> No</label>
+                      <label><Field className="form-field-radio" name="license" component={inputField} type="radio" value="false"/> No</label>
                     </div>
                   </div>
                 }

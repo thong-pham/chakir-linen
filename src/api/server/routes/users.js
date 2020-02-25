@@ -14,7 +14,7 @@ class UsersRoute {
   registerRoutes() {
 
     this.router.get('/v1/users', security.checkUserScope.bind(this, security.scope.READ_USERS), this.getUsers.bind(this));
-    this.router.post('/v1/users/create', security.checkUserScope.bind(this, security.scope.WRITE_USERS), this.addUser.bind(this));
+    this.router.post('/v1/users/create', this.addUser.bind(this));
     this.router.put('/v1/users/:user_id', security.checkUserScope.bind(this, security.scope.WRITE_USERS), this.updateUser.bind(this));
     this.router.delete('/v1/users/:user_id', security.checkUserScope.bind(this, security.scope.WRITE_USERS), this.deleteUser.bind(this));
 

@@ -10,6 +10,7 @@ const PATHS_WITH_OPEN_ACCESS = [
   '/api/v1/authorize',
   '/api/v1/systems/login',
   '/api/v1/users/login',
+  '/api/v1/users/create',
   /\/api\/v1\/payments/i,
   /\/api\/v1\/notifications/i,
   /\/ajax\//i
