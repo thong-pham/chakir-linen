@@ -50,7 +50,7 @@
     "bcrypt": "^3.0.1",
     "body-parser": "^1.18.3",
     "cezerin-client": "^0.31.1",
-    "chart.js": "^2.7.2",
+    "chart.js": "^2.9.4",
     "cookie-parser": "^1.4.3",
     "css-loader": "^0.28.11",
     "express": "^4.16.4",
